@@ -1,0 +1,200 @@
+\doxysection{libomtnet.\+OMTReceive Class Reference}
+\hypertarget{classlibomtnet_1_1_o_m_t_receive}{}\label{classlibomtnet_1_1_o_m_t_receive}\index{libomtnet.OMTReceive@{libomtnet.OMTReceive}}
+Inheritance diagram for libomtnet.\+OMTReceive\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=4.000000cm]{classlibomtnet_1_1_o_m_t_receive}
+\end{center}
+\end{figure}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classlibomtnet_1_1_o_m_t_receive_a097d35c3028f165388317cd2b8ec01db}{OMTReceive}} (string address, \mbox{\hyperlink{namespacelibomtnet_a2807610fe76878a198a3f8644640931c}{OMTFrame\+Type}} frame\+Types, \mbox{\hyperlink{namespacelibomtnet_af6daf021ac3275c6024ea49306b28b4b}{OMTPreferred\+Video\+Format}} format, \mbox{\hyperlink{namespacelibomtnet_ac88105a7cf19610d56b98f6c0daef72d}{OMTReceive\+Flags}} flags)
+\begin{DoxyCompactList}\small\item\em Create a new Receiver and begin connecting to the Sender specified by address. \end{DoxyCompactList}\item 
+override \mbox{\hyperlink{structlibomtnet_1_1_o_m_t_statistics}{OMTStatistics}} \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_receive_aa3e28e69f4c3b5d9ec7b490ebf948af1}{Get\+Video\+Statistics}} ()
+\item 
+override \mbox{\hyperlink{structlibomtnet_1_1_o_m_t_statistics}{OMTStatistics}} \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_receive_aadce693d4447daf5492a6cfc2923f22a}{Get\+Audio\+Statistics}} ()
+\item 
+\mbox{\hyperlink{classlibomtnet_1_1_o_m_t_sender_info}{OMTSender\+Info}} \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_receive_aa7727dd62aa8a2def0e8186886c0eb3b}{Get\+Sender\+Information}} ()
+\item 
+IPEnd\+Point \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_receive_a338d2f45f3386051c3b3b1bc97292035}{Get\+Remote\+End\+Point}} ()
+\item 
+int \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_receive_a5b52a5de0f91bd8cf70099b79d6364f4}{Send\+Metadata}} (\mbox{\hyperlink{structlibomtnet_1_1_o_m_t_media_frame}{OMTMedia\+Frame}} metadata)
+\item 
+bool \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_receive_a97f440f395a0bcce0b452594dbe9f4f5}{Receive}} (\mbox{\hyperlink{namespacelibomtnet_a2807610fe76878a198a3f8644640931c}{OMTFrame\+Type}} frame\+Types, int milliseconds\+Timeout, ref \mbox{\hyperlink{structlibomtnet_1_1_o_m_t_media_frame}{OMTMedia\+Frame}} out\+Frame)
+\begin{DoxyCompactList}\small\item\em Receive any available frames in the buffer, or wait for frames if empty Returns true if a frame was found, false of timed out. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_receive_a8622b6bd3a65e3af34d8563b1aac12c7}{Set\+Tally}} (\mbox{\hyperlink{structlibomtnet_1_1_o_m_t_tally}{OMTTally}} tally)
+\item 
+void \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_receive_a5b55ad63827e5a14cbcdef8e924ba88c}{Set\+Flags}} (\mbox{\hyperlink{namespacelibomtnet_ac88105a7cf19610d56b98f6c0daef72d}{OMTReceive\+Flags}} flags)
+\item 
+void \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_receive_a1def863c2d8ced19cedeb5388da342fc}{Set\+Suggested\+Quality}} (\mbox{\hyperlink{namespacelibomtnet_a215dee679f7d8e252717a6189f976f14}{OMTQuality}} quality)
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Member Functions inherited from \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_base}{libomtnet.\+OMTBase}}}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_base_a2a87413198c937f4426d24deece44af2}{Dispose}} ()
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+override void \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_receive_a5781b4246eccaaa279d9f75425a0915c}{Dispose\+Internal}} ()
+\end{DoxyCompactItemize}
+\doxysubsection*{Protected Member Functions inherited from \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_base}{libomtnet.\+OMTBase}}}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_base_a18e4af3910566cdc10b52c688a5e9200}{Set\+Exiting}} ()
+\item 
+virtual void \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_base_a856d39f33fd13ee574fab9f6f0cec5d9}{Dispose}} (bool disposing)
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Properties}
+\begin{DoxyCompactItemize}
+\item 
+string \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_receive_aeeb1b77e8781477a55d6cc29fb2166b1}{Address}}\hspace{0.3cm}{\ttfamily  \mbox{[}get\mbox{]}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Properties inherited from \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_base}{libomtnet.\+OMTBase}}}
+\begin{DoxyCompactItemize}
+\item 
+bool \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_base_a3b295792b38abbdc7fd9ba653bbf004e}{Exiting}}\hspace{0.3cm}{\ttfamily  \mbox{[}get\mbox{]}}
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Additional Inherited Members}
+\doxysubsection*{Protected Attributes inherited from \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_send_receive_base}{libomtnet.\+OMTSend\+Receive\+Base}}}
+\begin{DoxyCompactItemize}
+\item 
+object \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_send_receive_base_aa36f6ec1533daa7c29a637085fb2d3a9}{video\+Lock}} = new object()
+\item 
+object \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_send_receive_base_a4d7cbfa80c60263f109a7b515b999464}{audio\+Lock}} = new object()
+\item 
+object \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_send_receive_base_adb7e41d93e5b3d69ed8566cb59ee36d4}{meta\+Lock}} = new object()
+\end{DoxyCompactItemize}
+
+
+\label{doc-constructors}
+\Hypertarget{classlibomtnet_1_1_o_m_t_receive_doc-constructors}
+\doxysubsection{Constructor \& Destructor Documentation}
+\Hypertarget{classlibomtnet_1_1_o_m_t_receive_a097d35c3028f165388317cd2b8ec01db}\index{libomtnet.OMTReceive@{libomtnet.OMTReceive}!OMTReceive@{OMTReceive}}
+\index{OMTReceive@{OMTReceive}!libomtnet.OMTReceive@{libomtnet.OMTReceive}}
+\doxysubsubsection{\texorpdfstring{OMTReceive()}{OMTReceive()}}
+{\footnotesize\ttfamily \label{classlibomtnet_1_1_o_m_t_receive_a097d35c3028f165388317cd2b8ec01db} 
+libomtnet.\+OMTReceive.\+OMTReceive (\begin{DoxyParamCaption}\item[{string}]{address}{, }\item[{\mbox{\hyperlink{namespacelibomtnet_a2807610fe76878a198a3f8644640931c}{OMTFrame\+Type}}}]{frame\+Types}{, }\item[{\mbox{\hyperlink{namespacelibomtnet_af6daf021ac3275c6024ea49306b28b4b}{OMTPreferred\+Video\+Format}}}]{format}{, }\item[{\mbox{\hyperlink{namespacelibomtnet_ac88105a7cf19610d56b98f6c0daef72d}{OMTReceive\+Flags}}}]{flags}{}\end{DoxyParamCaption})}
+
+
+
+Create a new Receiver and begin connecting to the Sender specified by address. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em address} & Address to connect to, either the full name provided by \doxylink{classlibomtnet_1_1_o_m_t_discovery}{OMTDiscovery} or a URL in the format omt\+://hostname\+:port\\
+\hline
+{\em frame\+Types} & Specify the types of frames to receive, for example to setup audio only or metadata only feeds\\
+\hline
+{\em format} & Specify the preferred uncompressed video format to receive. UYVYor\+BGRA will only receive BGRA frames when an alpha channel is present.\\
+\hline
+{\em flags} & Specify optional flags such as requesting a Preview feed only, or including the compressed (VMX) data with each frame for further processing (or recording).\\
+\hline
+\end{DoxyParams}
+
+
+\label{doc-func-members}
+\Hypertarget{classlibomtnet_1_1_o_m_t_receive_doc-func-members}
+\doxysubsection{Member Function Documentation}
+\Hypertarget{classlibomtnet_1_1_o_m_t_receive_a5781b4246eccaaa279d9f75425a0915c}\index{libomtnet.OMTReceive@{libomtnet.OMTReceive}!DisposeInternal@{DisposeInternal}}
+\index{DisposeInternal@{DisposeInternal}!libomtnet.OMTReceive@{libomtnet.OMTReceive}}
+\doxysubsubsection{\texorpdfstring{DisposeInternal()}{DisposeInternal()}}
+{\footnotesize\ttfamily \label{classlibomtnet_1_1_o_m_t_receive_a5781b4246eccaaa279d9f75425a0915c} 
+override void libomtnet.\+OMTReceive.\+Dispose\+Internal (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}, {\ttfamily [virtual]}}
+
+
+
+Reimplemented from \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_base_a0bac19e6c0631815dc46fe33ea4d23d1}{libomtnet.\+OMTBase}}.
+
+\Hypertarget{classlibomtnet_1_1_o_m_t_receive_aadce693d4447daf5492a6cfc2923f22a}\index{libomtnet.OMTReceive@{libomtnet.OMTReceive}!GetAudioStatistics@{GetAudioStatistics}}
+\index{GetAudioStatistics@{GetAudioStatistics}!libomtnet.OMTReceive@{libomtnet.OMTReceive}}
+\doxysubsubsection{\texorpdfstring{GetAudioStatistics()}{GetAudioStatistics()}}
+{\footnotesize\ttfamily \label{classlibomtnet_1_1_o_m_t_receive_aadce693d4447daf5492a6cfc2923f22a} 
+override \mbox{\hyperlink{structlibomtnet_1_1_o_m_t_statistics}{OMTStatistics}} libomtnet.\+OMTReceive.\+Get\+Audio\+Statistics (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Reimplemented from \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_send_receive_base_a69109c2d719ae94ecb19647b43bd1e3a}{libomtnet.\+OMTSend\+Receive\+Base}}.
+
+\Hypertarget{classlibomtnet_1_1_o_m_t_receive_a338d2f45f3386051c3b3b1bc97292035}\index{libomtnet.OMTReceive@{libomtnet.OMTReceive}!GetRemoteEndPoint@{GetRemoteEndPoint}}
+\index{GetRemoteEndPoint@{GetRemoteEndPoint}!libomtnet.OMTReceive@{libomtnet.OMTReceive}}
+\doxysubsubsection{\texorpdfstring{GetRemoteEndPoint()}{GetRemoteEndPoint()}}
+{\footnotesize\ttfamily \label{classlibomtnet_1_1_o_m_t_receive_a338d2f45f3386051c3b3b1bc97292035} 
+IPEnd\+Point libomtnet.\+OMTReceive.\+Get\+Remote\+End\+Point (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})}
+
+\Hypertarget{classlibomtnet_1_1_o_m_t_receive_aa7727dd62aa8a2def0e8186886c0eb3b}\index{libomtnet.OMTReceive@{libomtnet.OMTReceive}!GetSenderInformation@{GetSenderInformation}}
+\index{GetSenderInformation@{GetSenderInformation}!libomtnet.OMTReceive@{libomtnet.OMTReceive}}
+\doxysubsubsection{\texorpdfstring{GetSenderInformation()}{GetSenderInformation()}}
+{\footnotesize\ttfamily \label{classlibomtnet_1_1_o_m_t_receive_aa7727dd62aa8a2def0e8186886c0eb3b} 
+\mbox{\hyperlink{classlibomtnet_1_1_o_m_t_sender_info}{OMTSender\+Info}} libomtnet.\+OMTReceive.\+Get\+Sender\+Information (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})}
+
+\Hypertarget{classlibomtnet_1_1_o_m_t_receive_aa3e28e69f4c3b5d9ec7b490ebf948af1}\index{libomtnet.OMTReceive@{libomtnet.OMTReceive}!GetVideoStatistics@{GetVideoStatistics}}
+\index{GetVideoStatistics@{GetVideoStatistics}!libomtnet.OMTReceive@{libomtnet.OMTReceive}}
+\doxysubsubsection{\texorpdfstring{GetVideoStatistics()}{GetVideoStatistics()}}
+{\footnotesize\ttfamily \label{classlibomtnet_1_1_o_m_t_receive_aa3e28e69f4c3b5d9ec7b490ebf948af1} 
+override \mbox{\hyperlink{structlibomtnet_1_1_o_m_t_statistics}{OMTStatistics}} libomtnet.\+OMTReceive.\+Get\+Video\+Statistics (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+
+Reimplemented from \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_send_receive_base_aa103d681c7d6a439af8bd1b266949381}{libomtnet.\+OMTSend\+Receive\+Base}}.
+
+\Hypertarget{classlibomtnet_1_1_o_m_t_receive_a97f440f395a0bcce0b452594dbe9f4f5}\index{libomtnet.OMTReceive@{libomtnet.OMTReceive}!Receive@{Receive}}
+\index{Receive@{Receive}!libomtnet.OMTReceive@{libomtnet.OMTReceive}}
+\doxysubsubsection{\texorpdfstring{Receive()}{Receive()}}
+{\footnotesize\ttfamily \label{classlibomtnet_1_1_o_m_t_receive_a97f440f395a0bcce0b452594dbe9f4f5} 
+bool libomtnet.\+OMTReceive.\+Receive (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{namespacelibomtnet_a2807610fe76878a198a3f8644640931c}{OMTFrame\+Type}}}]{frame\+Types}{, }\item[{int}]{milliseconds\+Timeout}{, }\item[{ref \mbox{\hyperlink{structlibomtnet_1_1_o_m_t_media_frame}{OMTMedia\+Frame}}}]{out\+Frame}{}\end{DoxyParamCaption})}
+
+
+
+Receive any available frames in the buffer, or wait for frames if empty Returns true if a frame was found, false of timed out. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em frame\+Types} & The frame types to receive\\
+\hline
+{\em milliseconds\+Timeout} & The maximum time to wait for a new frame if empty\\
+\hline
+{\em out\+Frame} & The frame struct to fill with the received data\\
+\hline
+\end{DoxyParams}
+\Hypertarget{classlibomtnet_1_1_o_m_t_receive_a5b52a5de0f91bd8cf70099b79d6364f4}\index{libomtnet.OMTReceive@{libomtnet.OMTReceive}!SendMetadata@{SendMetadata}}
+\index{SendMetadata@{SendMetadata}!libomtnet.OMTReceive@{libomtnet.OMTReceive}}
+\doxysubsubsection{\texorpdfstring{SendMetadata()}{SendMetadata()}}
+{\footnotesize\ttfamily \label{classlibomtnet_1_1_o_m_t_receive_a5b52a5de0f91bd8cf70099b79d6364f4} 
+int libomtnet.\+OMTReceive.\+Send\+Metadata (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structlibomtnet_1_1_o_m_t_media_frame}{OMTMedia\+Frame}}}]{metadata}{}\end{DoxyParamCaption})}
+
+\Hypertarget{classlibomtnet_1_1_o_m_t_receive_a5b55ad63827e5a14cbcdef8e924ba88c}\index{libomtnet.OMTReceive@{libomtnet.OMTReceive}!SetFlags@{SetFlags}}
+\index{SetFlags@{SetFlags}!libomtnet.OMTReceive@{libomtnet.OMTReceive}}
+\doxysubsubsection{\texorpdfstring{SetFlags()}{SetFlags()}}
+{\footnotesize\ttfamily \label{classlibomtnet_1_1_o_m_t_receive_a5b55ad63827e5a14cbcdef8e924ba88c} 
+void libomtnet.\+OMTReceive.\+Set\+Flags (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{namespacelibomtnet_ac88105a7cf19610d56b98f6c0daef72d}{OMTReceive\+Flags}}}]{flags}{}\end{DoxyParamCaption})}
+
+\Hypertarget{classlibomtnet_1_1_o_m_t_receive_a1def863c2d8ced19cedeb5388da342fc}\index{libomtnet.OMTReceive@{libomtnet.OMTReceive}!SetSuggestedQuality@{SetSuggestedQuality}}
+\index{SetSuggestedQuality@{SetSuggestedQuality}!libomtnet.OMTReceive@{libomtnet.OMTReceive}}
+\doxysubsubsection{\texorpdfstring{SetSuggestedQuality()}{SetSuggestedQuality()}}
+{\footnotesize\ttfamily \label{classlibomtnet_1_1_o_m_t_receive_a1def863c2d8ced19cedeb5388da342fc} 
+void libomtnet.\+OMTReceive.\+Set\+Suggested\+Quality (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{namespacelibomtnet_a215dee679f7d8e252717a6189f976f14}{OMTQuality}}}]{quality}{}\end{DoxyParamCaption})}
+
+\Hypertarget{classlibomtnet_1_1_o_m_t_receive_a8622b6bd3a65e3af34d8563b1aac12c7}\index{libomtnet.OMTReceive@{libomtnet.OMTReceive}!SetTally@{SetTally}}
+\index{SetTally@{SetTally}!libomtnet.OMTReceive@{libomtnet.OMTReceive}}
+\doxysubsubsection{\texorpdfstring{SetTally()}{SetTally()}}
+{\footnotesize\ttfamily \label{classlibomtnet_1_1_o_m_t_receive_a8622b6bd3a65e3af34d8563b1aac12c7} 
+void libomtnet.\+OMTReceive.\+Set\+Tally (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{structlibomtnet_1_1_o_m_t_tally}{OMTTally}}}]{tally}{}\end{DoxyParamCaption})}
+
+
+
+\label{doc-property-members}
+\Hypertarget{classlibomtnet_1_1_o_m_t_receive_doc-property-members}
+\doxysubsection{Property Documentation}
+\Hypertarget{classlibomtnet_1_1_o_m_t_receive_aeeb1b77e8781477a55d6cc29fb2166b1}\index{libomtnet.OMTReceive@{libomtnet.OMTReceive}!Address@{Address}}
+\index{Address@{Address}!libomtnet.OMTReceive@{libomtnet.OMTReceive}}
+\doxysubsubsection{\texorpdfstring{Address}{Address}}
+{\footnotesize\ttfamily \label{classlibomtnet_1_1_o_m_t_receive_aeeb1b77e8781477a55d6cc29fb2166b1} 
+string libomtnet.\+OMTReceive.\+Address\hspace{0.3cm}{\ttfamily [get]}}
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+E\+:/\+OMT Projects/libomtnet/\mbox{\hyperlink{_o_m_t_receive_8cs}{OMTReceive.\+cs}}\end{DoxyCompactItemize}

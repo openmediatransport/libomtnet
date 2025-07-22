@@ -1,0 +1,349 @@
+\doxysection{libomtnet Namespace Reference}
+\hypertarget{namespacelibomtnet}{}\label{namespacelibomtnet}\index{libomtnet@{libomtnet}}
+\doxysubsubsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+namespace \mbox{\hyperlink{namespacelibomtnet_1_1codecs}{codecs}}
+\item 
+namespace \mbox{\hyperlink{namespacelibomtnet_1_1linux}{linux}}
+\item 
+namespace \mbox{\hyperlink{namespacelibomtnet_1_1mac}{mac}}
+\item 
+namespace \mbox{\hyperlink{namespacelibomtnet_1_1tests}{tests}}
+\item 
+namespace \mbox{\hyperlink{namespacelibomtnet_1_1win32}{win32}}
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+interface {\bfseries IOMTDiscovery\+Notify}
+\item 
+class \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_address}{OMTAddress}}
+\item 
+class {\bfseries OMTAddress\+Sorter}
+\item 
+struct {\bfseries OMTAudio\+Header}
+\item 
+class \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_base}{OMTBase}}
+\item 
+class {\bfseries OMTBuffer}
+\item 
+class {\bfseries OMTChannel}
+\item 
+class {\bfseries OMTClock}
+\item 
+class {\bfseries OMTConstants}
+\item 
+class \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_discovery}{OMTDiscovery}}
+\item 
+class {\bfseries OMTFrame}
+\item 
+class {\bfseries OMTFrame\+Base}
+\item 
+struct {\bfseries OMTFrame\+Header}
+\item 
+class {\bfseries OMTFrame\+Pool}
+\item 
+class \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_logging}{OMTLogging}}
+\item 
+struct \mbox{\hyperlink{structlibomtnet_1_1_o_m_t_media_frame}{OMTMedia\+Frame}}
+\begin{DoxyCompactList}\small\item\em Stores one frame of Video, Audio or Metadata. \end{DoxyCompactList}\item 
+class {\bfseries OMTMetadata}
+\item 
+class {\bfseries OMTMetadata\+Constants}
+\begin{DoxyCompactList}\small\item\em Fixed static XML commands for protocol use. Receivers will check for these exact string matches and won\textquotesingle{}t bother to parse the XML. This means any changes to these, even slightly will result in the commands being ignored entirely. \end{DoxyCompactList}\item 
+class {\bfseries OMTMetadata\+Templates}
+\item 
+class {\bfseries OMTMetadata\+Utils}
+\item 
+class \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_platform}{OMTPlatform}}
+\item 
+class \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_receive}{OMTReceive}}
+\item 
+class \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_send}{OMTSend}}
+\item 
+class \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_sender_info}{OMTSender\+Info}}
+\item 
+class \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_send_receive_base}{OMTSend\+Receive\+Base}}
+\item 
+class \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_settings}{OMTSettings}}
+\item 
+struct \mbox{\hyperlink{structlibomtnet_1_1_o_m_t_size}{OMTSize}}
+\item 
+class {\bfseries OMTSocket\+Async\+Pool}
+\item 
+struct \mbox{\hyperlink{structlibomtnet_1_1_o_m_t_statistics}{OMTStatistics}}
+\item 
+struct \mbox{\hyperlink{structlibomtnet_1_1_o_m_t_tally}{OMTTally}}
+\item 
+class \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_utils}{OMTUtils}}
+\item 
+struct {\bfseries OMTVideo\+Header}
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{namespacelibomtnet_a2807610fe76878a198a3f8644640931c}{OMTFrame\+Type}} \{ \mbox{\hyperlink{namespacelibomtnet_a2807610fe76878a198a3f8644640931ca6adf97f83acf6453d4a6a4b1070f3754}{None}} = 0
+, \mbox{\hyperlink{namespacelibomtnet_a2807610fe76878a198a3f8644640931cace21470ab49d1d1976bc3dc72438c183}{Metadata}} = 1
+, \mbox{\hyperlink{namespacelibomtnet_a2807610fe76878a198a3f8644640931ca34e2d1989a1dbf75cd631596133ee5ee}{Video}} = 2
+, \mbox{\hyperlink{namespacelibomtnet_a2807610fe76878a198a3f8644640931cab22f0418e8ac915eb66f829d262d14a2}{Audio}} = 4
+ \}
+\item 
+enum \mbox{\hyperlink{namespacelibomtnet_ace93383f3f8702bda254d097c2ee3aaf}{OMTVideo\+Flags}} \{ \newline
+\mbox{\hyperlink{namespacelibomtnet_ace93383f3f8702bda254d097c2ee3aafa6adf97f83acf6453d4a6a4b1070f3754}{None}} = 0
+, \mbox{\hyperlink{namespacelibomtnet_ace93383f3f8702bda254d097c2ee3aafa1aa9297bdff20cc8c265644ec5775f61}{Interlaced}} = 1
+, \mbox{\hyperlink{namespacelibomtnet_ace93383f3f8702bda254d097c2ee3aafa6132295fcf5570fb8b0a944ef322a598}{Alpha}} = 2
+, \mbox{\hyperlink{namespacelibomtnet_ace93383f3f8702bda254d097c2ee3aafa35f7a4d0017cc8c4ea4c3691caf1fdfa}{Pre\+Multiplied}} = 4
+, \newline
+\mbox{\hyperlink{namespacelibomtnet_ace93383f3f8702bda254d097c2ee3aafa31fde7b05ac8952dacf4af8a704074ec}{Preview}} = 8
+ \}
+\begin{DoxyCompactList}\small\item\em Flags set on video frames Interlaced\+: Frames are interlaced Alpha\+: Frames contain an alpha channel Pre\+Multiplied\+: When combined with Alpha, alpha channel is premultiplied, otherwise straight Preview\+: Frame is a special 1/8th preview frame. \end{DoxyCompactList}\item 
+enum \mbox{\hyperlink{namespacelibomtnet_a19fac4ae80eb14dec5571e43ed075aed}{OMTCodec}} \{ \newline
+\mbox{\hyperlink{namespacelibomtnet_a19fac4ae80eb14dec5571e43ed075aedafcc0416934a5024dd7bb5f2eea754c85}{VMX1}} = 0x31584\+D56
+, \mbox{\hyperlink{namespacelibomtnet_a19fac4ae80eb14dec5571e43ed075aedadc5616c5d924e95156465d2b63602d28}{FPA1}} = 0x31415046
+, \mbox{\hyperlink{namespacelibomtnet_a19fac4ae80eb14dec5571e43ed075aeda87261c567c007f283e17a5fc8c259296}{UYVY}} = 0x59565955
+, \mbox{\hyperlink{namespacelibomtnet_a19fac4ae80eb14dec5571e43ed075aedac4ae1e9efde614ab49c73b35107eefe1}{YUY2}} = 0x32595559
+, \newline
+\mbox{\hyperlink{namespacelibomtnet_a19fac4ae80eb14dec5571e43ed075aeda5a1fe3c61c9e2fd6dbbc823589f6e697}{BGRA}} = 0x41524742
+ \}
+\begin{DoxyCompactList}\small\item\em Supported Codecs\+: VMX1 = Fast video codec UYVY = 16bpp YUV format YUY2 = 16bpp YUV format YUYV pixel order BGRA = 32bpp RGBA format (Same as ARGB32 on Win32) FPA1 = Floating-\/point Planar Audio 32bit. \end{DoxyCompactList}\item 
+enum \mbox{\hyperlink{namespacelibomtnet_ae348d71e4544baf85aa122b9945b3ba0}{OMTPlatform\+Type}} \{ \mbox{\hyperlink{namespacelibomtnet_ae348d71e4544baf85aa122b9945b3ba0a88183b946cc5f0e8c96b2e66e1c74a7e}{Unknown}} = 0
+, \mbox{\hyperlink{namespacelibomtnet_ae348d71e4544baf85aa122b9945b3ba0aa99913111481b4f0bcb70e08e3e99405}{Win32}} = 1
+, \mbox{\hyperlink{namespacelibomtnet_ae348d71e4544baf85aa122b9945b3ba0a0a5b7edb55b772c60bfa8af868b679cf}{Mac\+OS}} = 2
+, \mbox{\hyperlink{namespacelibomtnet_ae348d71e4544baf85aa122b9945b3ba0aedc9f0a5a5d57797bf68e37364743831}{Linux}} = 3
+ \}
+\item 
+enum \mbox{\hyperlink{namespacelibomtnet_a3a9b4d59f9ced35f9b15fd72302c5acb}{OMTColor\+Space}} \{ \mbox{\hyperlink{namespacelibomtnet_a3a9b4d59f9ced35f9b15fd72302c5acbaec0fc0100c4fc1ce4eea230c3dc10360}{Undefined}} = 0
+, \mbox{\hyperlink{namespacelibomtnet_a3a9b4d59f9ced35f9b15fd72302c5acba8b844879ae7dc4d0447f1986a7432db9}{BT601}} = 601
+, \mbox{\hyperlink{namespacelibomtnet_a3a9b4d59f9ced35f9b15fd72302c5acba0b69475c5783f10c0be13d36825fc3b9}{BT709}} = 709
+ \}
+\item 
+enum \mbox{\hyperlink{namespacelibomtnet_af6daf021ac3275c6024ea49306b28b4b}{OMTPreferred\+Video\+Format}} \{ \mbox{\hyperlink{namespacelibomtnet_af6daf021ac3275c6024ea49306b28b4ba87261c567c007f283e17a5fc8c259296}{UYVY}} = 0
+, \mbox{\hyperlink{namespacelibomtnet_af6daf021ac3275c6024ea49306b28b4baeb37f9b150738df9d508ad5b846c8694}{UYVYor\+BGRA}} = 1
+, \mbox{\hyperlink{namespacelibomtnet_af6daf021ac3275c6024ea49306b28b4ba5a1fe3c61c9e2fd6dbbc823589f6e697}{BGRA}} = 2
+ \}
+\begin{DoxyCompactList}\small\item\em Specify the preferred uncompressed video format of decoded frames UYVY is always the fastest, if no alpha channel is required. UYVYor\+BGRA will provide BGRA only when alpha channel is present. BGRA will always convert back to BGRA. \end{DoxyCompactList}\item 
+enum \mbox{\hyperlink{namespacelibomtnet_ac88105a7cf19610d56b98f6c0daef72d}{OMTReceive\+Flags}} \{ \mbox{\hyperlink{namespacelibomtnet_ac88105a7cf19610d56b98f6c0daef72da6adf97f83acf6453d4a6a4b1070f3754}{None}} = 0
+, \mbox{\hyperlink{namespacelibomtnet_ac88105a7cf19610d56b98f6c0daef72da31fde7b05ac8952dacf4af8a704074ec}{Preview}} = 1
+, \mbox{\hyperlink{namespacelibomtnet_ac88105a7cf19610d56b98f6c0daef72dab81c3e8e7a3e311b5e3ad7914a6f5f6d}{Include\+Compressed}} = 2
+ \}
+\begin{DoxyCompactList}\small\item\em Flags to enable certain features on a Receiver Preview\+: Receive only a 1/8th preview of the video. Include\+Compressed\+: Include a copy of the compressed VMX video frames for further processing or recording. \end{DoxyCompactList}\item 
+enum \mbox{\hyperlink{namespacelibomtnet_a215dee679f7d8e252717a6189f976f14}{OMTQuality}} \{ \mbox{\hyperlink{namespacelibomtnet_a215dee679f7d8e252717a6189f976f14a7a1920d61156abc05a60135aefe8bc67}{Default}} = 0
+, \mbox{\hyperlink{namespacelibomtnet_a215dee679f7d8e252717a6189f976f14a28d0edd045e05cf5af64e35ae0c4c6ef}{Low}} = 1
+, \mbox{\hyperlink{namespacelibomtnet_a215dee679f7d8e252717a6189f976f14a87f8a6ab85c9ced3702b4ea641ad4bb5}{Medium}} = 50
+, \mbox{\hyperlink{namespacelibomtnet_a215dee679f7d8e252717a6189f976f14a655d20c1ca69519ca647684edbb2db35}{High}} = 100
+ \}
+\begin{DoxyCompactList}\small\item\em Specify the video encoding quality. If set to Default, the Sender is configured to allow suggestions from all Receivers. The highest suggestion amongst all receivers is then selected. If a Receiver is set to Default, then it will defer the quality to whatever is set amongst other Receivers. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\label{doc-enum-members}
+\Hypertarget{namespacelibomtnet_doc-enum-members}
+\doxysubsection{Enumeration Type Documentation}
+\Hypertarget{namespacelibomtnet_a19fac4ae80eb14dec5571e43ed075aed}\index{libomtnet@{libomtnet}!OMTCodec@{OMTCodec}}
+\index{OMTCodec@{OMTCodec}!libomtnet@{libomtnet}}
+\doxysubsubsection{\texorpdfstring{OMTCodec}{OMTCodec}}
+{\footnotesize\ttfamily \label{namespacelibomtnet_a19fac4ae80eb14dec5571e43ed075aed} 
+enum \mbox{\hyperlink{namespacelibomtnet_a19fac4ae80eb14dec5571e43ed075aed}{libomtnet.\+OMTCodec}}}
+
+
+
+Supported Codecs\+: VMX1 = Fast video codec UYVY = 16bpp YUV format YUY2 = 16bpp YUV format YUYV pixel order BGRA = 32bpp RGBA format (Same as ARGB32 on Win32) FPA1 = Floating-\/point Planar Audio 32bit. 
+
+\begin{DoxyEnumFields}[2]{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{VMX1@{VMX1}!libomtnet@{libomtnet}}\index{libomtnet@{libomtnet}!VMX1@{VMX1}}}\Hypertarget{namespacelibomtnet_a19fac4ae80eb14dec5571e43ed075aedafcc0416934a5024dd7bb5f2eea754c85}\label{namespacelibomtnet_a19fac4ae80eb14dec5571e43ed075aedafcc0416934a5024dd7bb5f2eea754c85} 
+VMX1&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{FPA1@{FPA1}!libomtnet@{libomtnet}}\index{libomtnet@{libomtnet}!FPA1@{FPA1}}}\Hypertarget{namespacelibomtnet_a19fac4ae80eb14dec5571e43ed075aedadc5616c5d924e95156465d2b63602d28}\label{namespacelibomtnet_a19fac4ae80eb14dec5571e43ed075aedadc5616c5d924e95156465d2b63602d28} 
+FPA1&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{UYVY@{UYVY}!libomtnet@{libomtnet}}\index{libomtnet@{libomtnet}!UYVY@{UYVY}}}\Hypertarget{namespacelibomtnet_a19fac4ae80eb14dec5571e43ed075aeda87261c567c007f283e17a5fc8c259296}\label{namespacelibomtnet_a19fac4ae80eb14dec5571e43ed075aeda87261c567c007f283e17a5fc8c259296} 
+UYVY&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{YUY2@{YUY2}!libomtnet@{libomtnet}}\index{libomtnet@{libomtnet}!YUY2@{YUY2}}}\Hypertarget{namespacelibomtnet_a19fac4ae80eb14dec5571e43ed075aedac4ae1e9efde614ab49c73b35107eefe1}\label{namespacelibomtnet_a19fac4ae80eb14dec5571e43ed075aedac4ae1e9efde614ab49c73b35107eefe1} 
+YUY2&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{BGRA@{BGRA}!libomtnet@{libomtnet}}\index{libomtnet@{libomtnet}!BGRA@{BGRA}}}\Hypertarget{namespacelibomtnet_a19fac4ae80eb14dec5571e43ed075aeda5a1fe3c61c9e2fd6dbbc823589f6e697}\label{namespacelibomtnet_a19fac4ae80eb14dec5571e43ed075aeda5a1fe3c61c9e2fd6dbbc823589f6e697} 
+BGRA&\\
+\hline
+
+\end{DoxyEnumFields}
+\Hypertarget{namespacelibomtnet_a3a9b4d59f9ced35f9b15fd72302c5acb}\index{libomtnet@{libomtnet}!OMTColorSpace@{OMTColorSpace}}
+\index{OMTColorSpace@{OMTColorSpace}!libomtnet@{libomtnet}}
+\doxysubsubsection{\texorpdfstring{OMTColorSpace}{OMTColorSpace}}
+{\footnotesize\ttfamily \label{namespacelibomtnet_a3a9b4d59f9ced35f9b15fd72302c5acb} 
+enum \mbox{\hyperlink{namespacelibomtnet_a3a9b4d59f9ced35f9b15fd72302c5acb}{libomtnet.\+OMTColor\+Space}}}
+
+\begin{DoxyEnumFields}[2]{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{Undefined@{Undefined}!libomtnet@{libomtnet}}\index{libomtnet@{libomtnet}!Undefined@{Undefined}}}\Hypertarget{namespacelibomtnet_a3a9b4d59f9ced35f9b15fd72302c5acbaec0fc0100c4fc1ce4eea230c3dc10360}\label{namespacelibomtnet_a3a9b4d59f9ced35f9b15fd72302c5acbaec0fc0100c4fc1ce4eea230c3dc10360} 
+Undefined&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{BT601@{BT601}!libomtnet@{libomtnet}}\index{libomtnet@{libomtnet}!BT601@{BT601}}}\Hypertarget{namespacelibomtnet_a3a9b4d59f9ced35f9b15fd72302c5acba8b844879ae7dc4d0447f1986a7432db9}\label{namespacelibomtnet_a3a9b4d59f9ced35f9b15fd72302c5acba8b844879ae7dc4d0447f1986a7432db9} 
+BT601&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{BT709@{BT709}!libomtnet@{libomtnet}}\index{libomtnet@{libomtnet}!BT709@{BT709}}}\Hypertarget{namespacelibomtnet_a3a9b4d59f9ced35f9b15fd72302c5acba0b69475c5783f10c0be13d36825fc3b9}\label{namespacelibomtnet_a3a9b4d59f9ced35f9b15fd72302c5acba0b69475c5783f10c0be13d36825fc3b9} 
+BT709&\\
+\hline
+
+\end{DoxyEnumFields}
+\Hypertarget{namespacelibomtnet_a2807610fe76878a198a3f8644640931c}\index{libomtnet@{libomtnet}!OMTFrameType@{OMTFrameType}}
+\index{OMTFrameType@{OMTFrameType}!libomtnet@{libomtnet}}
+\doxysubsubsection{\texorpdfstring{OMTFrameType}{OMTFrameType}}
+{\footnotesize\ttfamily \label{namespacelibomtnet_a2807610fe76878a198a3f8644640931c} 
+enum \mbox{\hyperlink{namespacelibomtnet_a2807610fe76878a198a3f8644640931c}{libomtnet.\+OMTFrame\+Type}}}
+
+\begin{DoxyEnumFields}[2]{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{None@{None}!libomtnet@{libomtnet}}\index{libomtnet@{libomtnet}!None@{None}}}\Hypertarget{namespacelibomtnet_a2807610fe76878a198a3f8644640931ca6adf97f83acf6453d4a6a4b1070f3754}\label{namespacelibomtnet_a2807610fe76878a198a3f8644640931ca6adf97f83acf6453d4a6a4b1070f3754} 
+None&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{Metadata@{Metadata}!libomtnet@{libomtnet}}\index{libomtnet@{libomtnet}!Metadata@{Metadata}}}\Hypertarget{namespacelibomtnet_a2807610fe76878a198a3f8644640931cace21470ab49d1d1976bc3dc72438c183}\label{namespacelibomtnet_a2807610fe76878a198a3f8644640931cace21470ab49d1d1976bc3dc72438c183} 
+Metadata&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{Video@{Video}!libomtnet@{libomtnet}}\index{libomtnet@{libomtnet}!Video@{Video}}}\Hypertarget{namespacelibomtnet_a2807610fe76878a198a3f8644640931ca34e2d1989a1dbf75cd631596133ee5ee}\label{namespacelibomtnet_a2807610fe76878a198a3f8644640931ca34e2d1989a1dbf75cd631596133ee5ee} 
+Video&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{Audio@{Audio}!libomtnet@{libomtnet}}\index{libomtnet@{libomtnet}!Audio@{Audio}}}\Hypertarget{namespacelibomtnet_a2807610fe76878a198a3f8644640931cab22f0418e8ac915eb66f829d262d14a2}\label{namespacelibomtnet_a2807610fe76878a198a3f8644640931cab22f0418e8ac915eb66f829d262d14a2} 
+Audio&\\
+\hline
+
+\end{DoxyEnumFields}
+\Hypertarget{namespacelibomtnet_ae348d71e4544baf85aa122b9945b3ba0}\index{libomtnet@{libomtnet}!OMTPlatformType@{OMTPlatformType}}
+\index{OMTPlatformType@{OMTPlatformType}!libomtnet@{libomtnet}}
+\doxysubsubsection{\texorpdfstring{OMTPlatformType}{OMTPlatformType}}
+{\footnotesize\ttfamily \label{namespacelibomtnet_ae348d71e4544baf85aa122b9945b3ba0} 
+enum \mbox{\hyperlink{namespacelibomtnet_ae348d71e4544baf85aa122b9945b3ba0}{libomtnet.\+OMTPlatform\+Type}}}
+
+\begin{DoxyEnumFields}[2]{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{Unknown@{Unknown}!libomtnet@{libomtnet}}\index{libomtnet@{libomtnet}!Unknown@{Unknown}}}\Hypertarget{namespacelibomtnet_ae348d71e4544baf85aa122b9945b3ba0a88183b946cc5f0e8c96b2e66e1c74a7e}\label{namespacelibomtnet_ae348d71e4544baf85aa122b9945b3ba0a88183b946cc5f0e8c96b2e66e1c74a7e} 
+Unknown&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{Win32@{Win32}!libomtnet@{libomtnet}}\index{libomtnet@{libomtnet}!Win32@{Win32}}}\Hypertarget{namespacelibomtnet_ae348d71e4544baf85aa122b9945b3ba0aa99913111481b4f0bcb70e08e3e99405}\label{namespacelibomtnet_ae348d71e4544baf85aa122b9945b3ba0aa99913111481b4f0bcb70e08e3e99405} 
+Win32&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{MacOS@{MacOS}!libomtnet@{libomtnet}}\index{libomtnet@{libomtnet}!MacOS@{MacOS}}}\Hypertarget{namespacelibomtnet_ae348d71e4544baf85aa122b9945b3ba0a0a5b7edb55b772c60bfa8af868b679cf}\label{namespacelibomtnet_ae348d71e4544baf85aa122b9945b3ba0a0a5b7edb55b772c60bfa8af868b679cf} 
+Mac\+OS&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{Linux@{Linux}!libomtnet@{libomtnet}}\index{libomtnet@{libomtnet}!Linux@{Linux}}}\Hypertarget{namespacelibomtnet_ae348d71e4544baf85aa122b9945b3ba0aedc9f0a5a5d57797bf68e37364743831}\label{namespacelibomtnet_ae348d71e4544baf85aa122b9945b3ba0aedc9f0a5a5d57797bf68e37364743831} 
+Linux&\\
+\hline
+
+\end{DoxyEnumFields}
+\Hypertarget{namespacelibomtnet_af6daf021ac3275c6024ea49306b28b4b}\index{libomtnet@{libomtnet}!OMTPreferredVideoFormat@{OMTPreferredVideoFormat}}
+\index{OMTPreferredVideoFormat@{OMTPreferredVideoFormat}!libomtnet@{libomtnet}}
+\doxysubsubsection{\texorpdfstring{OMTPreferredVideoFormat}{OMTPreferredVideoFormat}}
+{\footnotesize\ttfamily \label{namespacelibomtnet_af6daf021ac3275c6024ea49306b28b4b} 
+enum \mbox{\hyperlink{namespacelibomtnet_af6daf021ac3275c6024ea49306b28b4b}{libomtnet.\+OMTPreferred\+Video\+Format}}}
+
+
+
+Specify the preferred uncompressed video format of decoded frames UYVY is always the fastest, if no alpha channel is required. UYVYor\+BGRA will provide BGRA only when alpha channel is present. BGRA will always convert back to BGRA. 
+
+\begin{DoxyEnumFields}[2]{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{UYVY@{UYVY}!libomtnet@{libomtnet}}\index{libomtnet@{libomtnet}!UYVY@{UYVY}}}\Hypertarget{namespacelibomtnet_af6daf021ac3275c6024ea49306b28b4ba87261c567c007f283e17a5fc8c259296}\label{namespacelibomtnet_af6daf021ac3275c6024ea49306b28b4ba87261c567c007f283e17a5fc8c259296} 
+UYVY&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{UYVYorBGRA@{UYVYorBGRA}!libomtnet@{libomtnet}}\index{libomtnet@{libomtnet}!UYVYorBGRA@{UYVYorBGRA}}}\Hypertarget{namespacelibomtnet_af6daf021ac3275c6024ea49306b28b4baeb37f9b150738df9d508ad5b846c8694}\label{namespacelibomtnet_af6daf021ac3275c6024ea49306b28b4baeb37f9b150738df9d508ad5b846c8694} 
+UYVYor\+BGRA&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{BGRA@{BGRA}!libomtnet@{libomtnet}}\index{libomtnet@{libomtnet}!BGRA@{BGRA}}}\Hypertarget{namespacelibomtnet_af6daf021ac3275c6024ea49306b28b4ba5a1fe3c61c9e2fd6dbbc823589f6e697}\label{namespacelibomtnet_af6daf021ac3275c6024ea49306b28b4ba5a1fe3c61c9e2fd6dbbc823589f6e697} 
+BGRA&\\
+\hline
+
+\end{DoxyEnumFields}
+\Hypertarget{namespacelibomtnet_a215dee679f7d8e252717a6189f976f14}\index{libomtnet@{libomtnet}!OMTQuality@{OMTQuality}}
+\index{OMTQuality@{OMTQuality}!libomtnet@{libomtnet}}
+\doxysubsubsection{\texorpdfstring{OMTQuality}{OMTQuality}}
+{\footnotesize\ttfamily \label{namespacelibomtnet_a215dee679f7d8e252717a6189f976f14} 
+enum \mbox{\hyperlink{namespacelibomtnet_a215dee679f7d8e252717a6189f976f14}{libomtnet.\+OMTQuality}}}
+
+
+
+Specify the video encoding quality. If set to Default, the Sender is configured to allow suggestions from all Receivers. The highest suggestion amongst all receivers is then selected. If a Receiver is set to Default, then it will defer the quality to whatever is set amongst other Receivers. 
+
+\begin{DoxyEnumFields}[2]{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{Default@{Default}!libomtnet@{libomtnet}}\index{libomtnet@{libomtnet}!Default@{Default}}}\Hypertarget{namespacelibomtnet_a215dee679f7d8e252717a6189f976f14a7a1920d61156abc05a60135aefe8bc67}\label{namespacelibomtnet_a215dee679f7d8e252717a6189f976f14a7a1920d61156abc05a60135aefe8bc67} 
+Default&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{Low@{Low}!libomtnet@{libomtnet}}\index{libomtnet@{libomtnet}!Low@{Low}}}\Hypertarget{namespacelibomtnet_a215dee679f7d8e252717a6189f976f14a28d0edd045e05cf5af64e35ae0c4c6ef}\label{namespacelibomtnet_a215dee679f7d8e252717a6189f976f14a28d0edd045e05cf5af64e35ae0c4c6ef} 
+Low&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{Medium@{Medium}!libomtnet@{libomtnet}}\index{libomtnet@{libomtnet}!Medium@{Medium}}}\Hypertarget{namespacelibomtnet_a215dee679f7d8e252717a6189f976f14a87f8a6ab85c9ced3702b4ea641ad4bb5}\label{namespacelibomtnet_a215dee679f7d8e252717a6189f976f14a87f8a6ab85c9ced3702b4ea641ad4bb5} 
+Medium&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{High@{High}!libomtnet@{libomtnet}}\index{libomtnet@{libomtnet}!High@{High}}}\Hypertarget{namespacelibomtnet_a215dee679f7d8e252717a6189f976f14a655d20c1ca69519ca647684edbb2db35}\label{namespacelibomtnet_a215dee679f7d8e252717a6189f976f14a655d20c1ca69519ca647684edbb2db35} 
+High&\\
+\hline
+
+\end{DoxyEnumFields}
+\Hypertarget{namespacelibomtnet_ac88105a7cf19610d56b98f6c0daef72d}\index{libomtnet@{libomtnet}!OMTReceiveFlags@{OMTReceiveFlags}}
+\index{OMTReceiveFlags@{OMTReceiveFlags}!libomtnet@{libomtnet}}
+\doxysubsubsection{\texorpdfstring{OMTReceiveFlags}{OMTReceiveFlags}}
+{\footnotesize\ttfamily \label{namespacelibomtnet_ac88105a7cf19610d56b98f6c0daef72d} 
+enum \mbox{\hyperlink{namespacelibomtnet_ac88105a7cf19610d56b98f6c0daef72d}{libomtnet.\+OMTReceive\+Flags}}}
+
+
+
+Flags to enable certain features on a Receiver Preview\+: Receive only a 1/8th preview of the video. Include\+Compressed\+: Include a copy of the compressed VMX video frames for further processing or recording. 
+
+\begin{DoxyEnumFields}[2]{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{None@{None}!libomtnet@{libomtnet}}\index{libomtnet@{libomtnet}!None@{None}}}\Hypertarget{namespacelibomtnet_ac88105a7cf19610d56b98f6c0daef72da6adf97f83acf6453d4a6a4b1070f3754}\label{namespacelibomtnet_ac88105a7cf19610d56b98f6c0daef72da6adf97f83acf6453d4a6a4b1070f3754} 
+None&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{Preview@{Preview}!libomtnet@{libomtnet}}\index{libomtnet@{libomtnet}!Preview@{Preview}}}\Hypertarget{namespacelibomtnet_ac88105a7cf19610d56b98f6c0daef72da31fde7b05ac8952dacf4af8a704074ec}\label{namespacelibomtnet_ac88105a7cf19610d56b98f6c0daef72da31fde7b05ac8952dacf4af8a704074ec} 
+Preview&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{IncludeCompressed@{IncludeCompressed}!libomtnet@{libomtnet}}\index{libomtnet@{libomtnet}!IncludeCompressed@{IncludeCompressed}}}\Hypertarget{namespacelibomtnet_ac88105a7cf19610d56b98f6c0daef72dab81c3e8e7a3e311b5e3ad7914a6f5f6d}\label{namespacelibomtnet_ac88105a7cf19610d56b98f6c0daef72dab81c3e8e7a3e311b5e3ad7914a6f5f6d} 
+Include\+Compressed&\\
+\hline
+
+\end{DoxyEnumFields}
+\Hypertarget{namespacelibomtnet_ace93383f3f8702bda254d097c2ee3aaf}\index{libomtnet@{libomtnet}!OMTVideoFlags@{OMTVideoFlags}}
+\index{OMTVideoFlags@{OMTVideoFlags}!libomtnet@{libomtnet}}
+\doxysubsubsection{\texorpdfstring{OMTVideoFlags}{OMTVideoFlags}}
+{\footnotesize\ttfamily \label{namespacelibomtnet_ace93383f3f8702bda254d097c2ee3aaf} 
+enum \mbox{\hyperlink{namespacelibomtnet_ace93383f3f8702bda254d097c2ee3aaf}{libomtnet.\+OMTVideo\+Flags}}}
+
+
+
+Flags set on video frames Interlaced\+: Frames are interlaced Alpha\+: Frames contain an alpha channel Pre\+Multiplied\+: When combined with Alpha, alpha channel is premultiplied, otherwise straight Preview\+: Frame is a special 1/8th preview frame. 
+
+\begin{DoxyEnumFields}[2]{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{None@{None}!libomtnet@{libomtnet}}\index{libomtnet@{libomtnet}!None@{None}}}\Hypertarget{namespacelibomtnet_ace93383f3f8702bda254d097c2ee3aafa6adf97f83acf6453d4a6a4b1070f3754}\label{namespacelibomtnet_ace93383f3f8702bda254d097c2ee3aafa6adf97f83acf6453d4a6a4b1070f3754} 
+None&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{Interlaced@{Interlaced}!libomtnet@{libomtnet}}\index{libomtnet@{libomtnet}!Interlaced@{Interlaced}}}\Hypertarget{namespacelibomtnet_ace93383f3f8702bda254d097c2ee3aafa1aa9297bdff20cc8c265644ec5775f61}\label{namespacelibomtnet_ace93383f3f8702bda254d097c2ee3aafa1aa9297bdff20cc8c265644ec5775f61} 
+Interlaced&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{Alpha@{Alpha}!libomtnet@{libomtnet}}\index{libomtnet@{libomtnet}!Alpha@{Alpha}}}\Hypertarget{namespacelibomtnet_ace93383f3f8702bda254d097c2ee3aafa6132295fcf5570fb8b0a944ef322a598}\label{namespacelibomtnet_ace93383f3f8702bda254d097c2ee3aafa6132295fcf5570fb8b0a944ef322a598} 
+Alpha&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{PreMultiplied@{PreMultiplied}!libomtnet@{libomtnet}}\index{libomtnet@{libomtnet}!PreMultiplied@{PreMultiplied}}}\Hypertarget{namespacelibomtnet_ace93383f3f8702bda254d097c2ee3aafa35f7a4d0017cc8c4ea4c3691caf1fdfa}\label{namespacelibomtnet_ace93383f3f8702bda254d097c2ee3aafa35f7a4d0017cc8c4ea4c3691caf1fdfa} 
+Pre\+Multiplied&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{Preview@{Preview}!libomtnet@{libomtnet}}\index{libomtnet@{libomtnet}!Preview@{Preview}}}\Hypertarget{namespacelibomtnet_ace93383f3f8702bda254d097c2ee3aafa31fde7b05ac8952dacf4af8a704074ec}\label{namespacelibomtnet_ace93383f3f8702bda254d097c2ee3aafa31fde7b05ac8952dacf4af8a704074ec} 
+Preview&\\
+\hline
+
+\end{DoxyEnumFields}

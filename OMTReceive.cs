@@ -1,0 +1,766 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Net.Sockets;
+using System.Threading;
+using libomtnet.codecs;
+using System.Runtime.InteropServices;
+using System.Diagnostics;
+
+namespace libomtnet
+{
+    public class OMTReceive : OMTSendReceiveBase, IOMTDiscoveryNotify
+    {
+        private OMTChannel videoChannel;
+        private OMTChannel audioChannel;
+        private OMTFrameType frameTypes;
+        private readonly string address;
+        private readonly object connectSync = new object();
+        private OMTPinnedBuffer tempAudio;
+        private OMTPinnedBuffer tempVideo;
+        private int tempVideoStride;
+        private OMTTally tally;
+        private OMTReceiveFlags flags;
+        private OMTPreferredVideoFormat preferredVideoFormat;
+        private OMTVMX1Codec codec = null;
+
+        private IntPtr tempCompressedVideo = IntPtr.Zero;
+
+        private AutoResetEvent videoHandle;
+        private AutoResetEvent audioHandle;
+
+        private WaitHandle[] allWaitHandles = { };
+        private WaitHandle[] videoHandles = { };
+        private WaitHandle[] audioHandles = { };
+        private WaitHandle[] avHandles = { };
+        private WaitHandle[] metaDataHandles = { };
+
+        private OMTQuality suggestedQuality = OMTQuality.Default;
+
+        private OMTFPA1Codec audioCodec = null;
+
+        private ConnectionState videoConnectionState = null;
+        private ConnectionState audioConnectionState = null;
+
+        private class ConnectionState
+        {
+            public OMTFrameType frameType;
+            public Socket socket;
+            public IAsyncResult result;
+        }
+
+        private void DestroyWaitHandles()
+        {
+            if (videoHandle != null) videoHandle.Close();
+            if (audioHandle != null) audioHandle.Close();
+            if (metadataHandle != null) metadataHandle.Close();
+            if (tallyHandle != null) tallyHandle.Close();
+            videoHandle = null;
+            audioHandle = null;
+            metadataHandle = null;
+            tallyHandle = null;
+        }
+        private void SetupWaitHandles()
+        {
+            videoHandle = new AutoResetEvent(false);
+            audioHandle = new AutoResetEvent(false);
+            metadataHandle = new AutoResetEvent(false);
+            tallyHandle = new AutoResetEvent(false);
+
+            List<WaitHandle> allh = new List<WaitHandle>();
+            List<WaitHandle> vh = new List<WaitHandle>();
+            List<WaitHandle> ah = new List<WaitHandle>();
+            List<WaitHandle> mh = new List<WaitHandle>();
+            List<WaitHandle> avh = new List<WaitHandle>();
+
+            allh.Add(videoHandle);
+            allh.Add(audioHandle);
+            allh.Add(metadataHandle);
+
+            mh.Add(metadataHandle);
+
+            vh.Add(videoHandle);
+            avh.Add(videoHandle);
+            
+            ah.Add(audioHandle);
+            avh.Add(audioHandle);
+
+            allWaitHandles = allh.ToArray();
+            videoHandles = vh.ToArray();
+            audioHandles = ah.ToArray();
+            avHandles = avh.ToArray();
+            metaDataHandles = mh.ToArray();
+        }
+
+        /// <summary>
+        /// Create a new Receiver and begin connecting to the Sender specified by address
+        /// </summary>
+        /// <param name="address">Address to connect to, either the full name provided by OMTDiscovery or a URL in the format omt://hostname:port</param>
+        /// <param name="frameTypes">Specify the types of frames to receive, for example to setup audio only or metadata only feeds</param>
+        /// <param name="format">Specify the preferred uncompressed video format to receive. UYVYorBGRA will only receive BGRA frames when an alpha channel is present.</param>
+        /// <param name="flags">Specify optional flags such as requesting a Preview feed only, or including the compressed (VMX) data with each frame for further processing (or recording).</param>
+        public OMTReceive(string address, OMTFrameType frameTypes, OMTPreferredVideoFormat format, OMTReceiveFlags flags) {
+            SetupWaitHandles();
+            this.preferredVideoFormat = format;
+            this.flags = flags;
+            this.frameTypes = frameTypes;
+            this.address = address;
+            this.audioCodec = new OMTFPA1Codec(OMTConstants.AUDIO_MAX_SIZE);
+            if (flags.HasFlag(OMTReceiveFlags.IncludeCompressed))
+            {
+                tempCompressedVideo = Marshal.AllocHGlobal(OMTConstants.VIDEO_MAX_SIZE);
+            }
+            BeginConnect();
+            OMTDiscovery discovery = OMTDiscovery.GetInstance();
+            discovery.Subscribe(this);
+        }
+
+        public override OMTStatistics GetVideoStatistics()
+        {
+            OMTChannel ch = videoChannel;
+            if (ch != null)
+            {
+                OMTStatistics s = ch.GetStatistics();
+                UpdateCodecTimerStatistics(ref s);
+                return s;
+            }
+            return base.GetVideoStatistics();
+        }
+
+        public override OMTStatistics GetAudioStatistics()
+        {
+            OMTChannel ch = audioChannel;
+            if (ch != null)
+            {
+                return ch.GetStatistics();
+            }
+            return base.GetAudioStatistics();
+        }
+
+        private void CreateCodec(int width, int height, int framesPerSecond, VMXColorSpace colorSpace)
+        {
+            if (codec == null)
+            {
+                codec = new OMTVMX1Codec(width, height, framesPerSecond, VMXProfile.Default, colorSpace);
+            }
+            else if (codec.Width != width || codec.Height != height || codec.ColorSpace != colorSpace ||  codec.FramesPerSecond != framesPerSecond)
+            {
+                codec.Dispose();
+                codec = new OMTVMX1Codec(width, height, framesPerSecond, VMXProfile.Default, colorSpace);
+            }
+            tempVideoStride = width * 4;
+            int len = tempVideoStride * height * 4;
+            if (tempVideo == null)
+            {
+                tempVideo = new OMTPinnedBuffer(len);
+            } else if (tempVideo.Length < len)
+            {
+                tempVideo.Dispose();
+                tempVideo = new OMTPinnedBuffer(len);
+            }
+        }
+
+        protected override void DisposeInternal()
+        {
+            OMTDiscovery discovery = OMTDiscovery.GetInstance();
+            if (discovery != null) discovery.Unsubscribe(this);
+
+            if (videoHandle != null) videoHandle.Set();
+            if (audioHandle != null) audioHandle.Set();
+            if (metadataHandle != null) metadataHandle.Set();
+            if (tallyHandle != null) tallyHandle.Set();
+
+            lock (videoLock) { }
+            lock (audioLock) { }
+            lock (metaLock) { }
+            lock (connectSync)
+            {
+                frameTypes = OMTFrameType.None;
+                CloseChannels();
+            }
+
+            DestroyWaitHandles();
+
+            if (codec != null)
+            {
+                codec.Dispose();
+                codec = null;
+            }
+            if (tempCompressedVideo != IntPtr.Zero)
+            {
+                Marshal.FreeHGlobal(tempCompressedVideo);
+                tempCompressedVideo = IntPtr.Zero;
+            }
+            if (tempAudio != null)
+            {
+                tempAudio.Dispose();
+                tempAudio = null;
+            }
+            if (tempVideo != null)
+            {
+                tempVideo.Dispose();
+                tempVideo = null;
+            }
+            base.DisposeInternal();
+        }
+
+        void IOMTDiscoveryNotify.Notify(OMTAddress address)
+        {
+           if (address.ToString() == this.address)
+            {
+                BeginConnect(address);
+            }
+        }
+        private void CloseChannels()
+        {
+            if (videoChannel != null) {
+                videoChannel.Changed -= Channel_Changed;
+                videoChannel.Dispose(); 
+                videoChannel = null;
+            }
+            if (audioChannel != null) {
+                audioChannel.Changed -= Channel_Changed;
+                audioChannel.Dispose(); 
+                audioChannel = null;
+            }
+        }
+
+        private void BeginConnect()
+        {
+            OMTDiscovery discovery = OMTDiscovery.GetInstance();
+            if (discovery != null)
+            {
+                OMTAddress address = discovery.FindByFullNameOrUrl(this.address);
+                if (address != null)
+                {
+                    BeginConnect(address);
+                }
+            }
+        }
+        private void BeginConnect(OMTAddress address)
+        {
+            lock (connectSync)
+            {
+                if (Exiting) return;
+                if (!IsConnected())
+                {
+                    IPAddress[] addresses = address.Addresses;
+                    if (addresses.Length > 0)
+                    {
+                        if (audioConnectionState == null && videoConnectionState == null)
+                        {
+                            CloseChannels();
+                            if (frameTypes.HasFlag(OMTFrameType.Video) && videoConnectionState == null)
+                            {
+                                OMTLogging.Write("ConnectingVideo: " + address.ToString() + ":" + address.Port, "OMTReceive.BeginConnect");
+                                videoConnectionState = BeginConnect(OMTFrameType.Video, address.Addresses, address.Port);
+                            }
+                            if (frameTypes.HasFlag(OMTFrameType.Audio) && audioConnectionState == null)
+                            {
+                                OMTLogging.Write("ConnectingAudio: " + address.ToString() + ":" + address.Port, "OMTReceive.BeginConnect");
+                                audioConnectionState = BeginConnect(OMTFrameType.Audio, address.Addresses, address.Port);
+                            }
+                            if (frameTypes == OMTFrameType.Metadata && videoConnectionState == null)
+                            {
+                                OMTLogging.Write("ConnectingMetadata: " + address.ToString() + ":" + address.Port, "OMTReceive.BeginConnect");
+                                videoConnectionState = BeginConnect(OMTFrameType.Video, address.Addresses, address.Port);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private ConnectionState BeginConnect(OMTFrameType frameType, IPAddress[] ips, int port)
+        {
+            ConnectionState cs = new ConnectionState();
+            cs.frameType = frameType;
+            cs.socket = new Socket(AddressFamily.InterNetworkV6, SocketType.Stream, ProtocolType.Tcp);
+            cs.socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
+            cs.result = cs.socket.BeginConnect(ips, port, ConnectionCompleted, cs);
+            return cs;
+        }
+
+        private void ConnectionCompleted(IAsyncResult ar)
+        {
+            lock (connectSync)
+            {
+                ConnectionState cs = (ConnectionState)ar.AsyncState;
+                try
+                {
+                    cs.socket.EndConnect(ar);
+                    if (ar.IsCompleted)
+                    {
+                        if (cs.frameType == OMTFrameType.Video)
+                        {
+                            this.videoChannel = new OMTChannel(cs.socket, OMTFrameType.Video, videoHandle, metadataHandle);
+                            this.videoChannel.Changed += Channel_Changed;
+                            this.videoChannel.StartReceive();
+                            this.videoChannel.Send(new OMTMetadata(0, OMTMetadataConstants.CHANNEL_SUBSCRIBE_METADATA));
+                            if (flags.HasFlag(OMTReceiveFlags.Preview))
+                            {
+                                this.videoChannel.Send(new OMTMetadata(0, OMTMetadataConstants.CHANNEL_PREVIEW_VIDEO_ON));
+                            }
+                            if (frameTypes.HasFlag(OMTFrameType.Video))
+                            {
+                                this.videoChannel.Send(new OMTMetadata(0, OMTMetadataConstants.CHANNEL_SUBSCRIBE_VIDEO));
+                                SendSuggestedQuality();
+                            }
+                            SendTally();
+                        }
+                        if (cs.frameType == OMTFrameType.Audio)
+                        {
+                            this.audioChannel = new OMTChannel(cs.socket, OMTFrameType.Audio, audioHandle, metadataHandle);
+                            this.audioChannel.Changed += Channel_Changed;
+                            this.audioChannel.StartReceive();
+                            if (frameTypes.HasFlag(OMTFrameType.Video) == false)
+                            {
+                                this.audioChannel.Send(new OMTMetadata(0, OMTMetadataConstants.CHANNEL_SUBSCRIBE_METADATA));
+                            }
+                            this.audioChannel.Send(new OMTMetadata(0, OMTMetadataConstants.CHANNEL_SUBSCRIBE_AUDIO));
+                        }
+                        OMTLogging.Write("Connected: " + address.ToString(), "OMTReceive.Connect");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    OMTLogging.Write(ex.ToString(), "OMTReceive.Connect");
+                }
+                if (cs.frameType == OMTFrameType.Video)
+                {
+                    videoConnectionState = null;
+                }
+                else if (cs.frameType == OMTFrameType.Audio)
+                {
+                    audioConnectionState = null;
+                }
+            }            
+        }
+
+        public bool IsConnected()
+        {
+            OMTChannel ch = videoChannel;
+            if (frameTypes.HasFlag(OMTFrameType.Video))
+            {
+                if (!IsConnected(ch))
+                {
+                    return false;
+                }
+            }
+            ch = audioChannel;
+            if (frameTypes.HasFlag(OMTFrameType.Audio))
+            {
+                if (!IsConnected(ch))
+                {
+                    return false;
+                }
+            }
+            if (frameTypes == OMTFrameType.Metadata)
+            {
+                if (!IsConnected(videoChannel))
+                {
+                    return false;
+                }
+            } else if (frameTypes == OMTFrameType.None)
+            {
+                return true;
+            }
+            return true;
+        }
+        private bool IsConnected(OMTChannel ch)
+        {
+            if (ch != null)
+            {
+                if (!ch.Connected) return false;
+            }
+            else
+            {
+                return false;
+            }
+            return true;
+        }
+
+        private OMTFrameBase ReceiveInternal(OMTFrameType frameTypes)
+        {
+            if (frameTypes.HasFlag(OMTFrameType.Video))
+            {
+                if (videoChannel != null)
+                {
+                    if (videoChannel.ReadyFrameCount > 0)
+                    {
+                        return videoChannel.ReceiveFrame();
+                    }
+                }
+            }
+            if (frameTypes.HasFlag(OMTFrameType.Audio))
+            {
+                if (audioChannel != null)
+                {
+                    if (audioChannel.ReadyFrameCount > 0)
+                    {
+                        return audioChannel.ReceiveFrame();
+                    }
+                }
+            }
+            if (frameTypes.HasFlag(OMTFrameType.Metadata))
+            {
+                if (videoChannel != null)
+                {
+                    if (videoChannel.ReadyMetadataCount > 0)
+                    {
+                        return videoChannel.ReceiveMetadata();
+                    }
+                }
+                if (audioChannel != null)
+                {
+                    if (audioChannel.ReadyMetadataCount > 0)
+                    {
+                        return audioChannel.ReceiveMetadata();
+                    }
+                }
+            }
+            return null;
+        }
+        private OMTFrameBase ReceiveInternal(OMTFrameType frameTypes, int millisecondsTimeout)
+        {
+            if (Exiting) return null;
+            if (frameTypes == OMTFrameType.None) return null;
+            if (!IsConnected())
+            {
+                BeginConnect();
+            }
+            OMTFrameBase frame = ReceiveInternal(frameTypes);
+            if (frame == null)
+            {
+                for (int i = 0; i < 4; i ++)
+                {
+                    int result = WaitHandle.WaitTimeout;
+                    if (frameTypes == (OMTFrameType.Video | OMTFrameType.Audio | OMTFrameType.Metadata))
+                    {
+                        result = WaitHandle.WaitAny(allWaitHandles, millisecondsTimeout);
+                    }
+                    else if (frameTypes == (OMTFrameType.Video | OMTFrameType.Audio))
+                    {
+                        result = WaitHandle.WaitAny(avHandles, millisecondsTimeout);
+                    }
+                    else if (frameTypes == OMTFrameType.Video)
+                    {
+                        result = WaitHandle.WaitAny(videoHandles, millisecondsTimeout);
+                    }
+                    else if (frameTypes == OMTFrameType.Audio)
+                    {
+                        result = WaitHandle.WaitAny(audioHandles, millisecondsTimeout);
+                    }
+                    else if (frameTypes == OMTFrameType.Metadata)
+                    {
+                        result = WaitHandle.WaitAny(metaDataHandles, millisecondsTimeout);
+                    }
+                    frame = ReceiveInternal(frameTypes);
+                    if (frame != null) break;
+                    if (result == WaitHandle.WaitTimeout) break;
+                    if (Exiting) break;
+                }
+            }
+            return frame;
+        }
+
+        private int SendMetadata(OMTMetadata metadata)
+        {
+            OMTChannel ch = null;
+            if (videoChannel != null)
+            {
+                ch = videoChannel;
+            }
+            else if (audioChannel != null)
+            {
+                ch = audioChannel;
+            }
+            if (ch != null)
+            {
+               return ch.Send(metadata);
+            }
+            return 0;
+        }
+
+        public OMTSenderInfo GetSenderInformation()
+        {
+            OMTChannel ch = videoChannel;
+            if (ch == null) ch = audioChannel;
+            if (ch != null)
+            {
+                return ch.SenderInformation;
+            }
+            return null;
+        }
+
+        public IPEndPoint GetRemoteEndPoint()
+        {
+            OMTChannel ch = videoChannel;
+            if (ch == null) ch = audioChannel;
+            if (ch != null)
+            {
+                return ch.RemoteEndPoint;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Send a metadata frame to the sender. Does not support other frame types.
+        /// </summary>
+        /// <param name="metadata"></param>
+        /// <returns></returns>
+        public int Send(OMTMediaFrame metadata)
+        {
+            if (Exiting) return 0;
+            if (metadata.Type != OMTFrameType.Metadata) return 0;
+            OMTMetadata m = OMTMetadata.FromMediaFrame(metadata);
+            if (m != null)
+            {
+                return SendMetadata(m);
+            }
+            return 0;
+        }
+
+        private bool ReceiveVideo(OMTFrame frame, ref OMTMediaFrame videoFrame)
+        {
+            lock (videoLock)
+            {
+                if (Exiting) return false;
+                OMTVideoHeader header = frame.GetVideoHeader();
+                if (header.Codec == (int)OMTCodec.VMX1)
+                {
+                    OMTVideoFlags flags = (OMTVideoFlags)header.Flags;
+
+                    int framesPerSecond = (int)OMTUtils.ToFrameRate(header.FrameRateN, header.FrameRateD);
+                    CreateCodec(header.Width, header.Height, framesPerSecond, (VMXColorSpace)header.ColorSpace);
+                    byte[] dst = tempVideo.Buffer;
+
+                    bool result = false;
+                    bool alpha = flags.HasFlag(OMTVideoFlags.Alpha);
+                    bool preview = flags.HasFlag(OMTVideoFlags.Preview);
+                    bool interlaced = flags.HasFlag(OMTVideoFlags.Interlaced);
+
+                    BeginCodecTimer();
+                    if (preview)
+                    {
+                        OMTSize sz = codec.GetPreviewSize(interlaced);
+                        header.Width = sz.Width;
+                        header.Height = sz.Height;
+
+                        if (preferredVideoFormat == OMTPreferredVideoFormat.UYVY | (preferredVideoFormat == OMTPreferredVideoFormat.UYVYorBGRA & (alpha == false)))
+                        {
+                            tempVideoStride = header.Width * 2;
+                            result = codec.DecodePreview(VMXImageType.UYVY, frame.Data.Buffer, frame.Data.Length, ref dst, tempVideoStride);
+                            videoFrame.Codec = (int)OMTCodec.UYVY;
+                        }
+                        else if (preferredVideoFormat == OMTPreferredVideoFormat.BGRA | (preferredVideoFormat == OMTPreferredVideoFormat.UYVYorBGRA & alpha))
+                        {
+                            tempVideoStride = header.Width * 4;
+                            if (alpha)
+                            {
+                                result = codec.DecodePreview(VMXImageType.BGRA, frame.Data.Buffer, frame.Data.Length, ref dst, tempVideoStride);                                
+                            } else
+                            {
+                                result = codec.DecodePreview(VMXImageType.BGRX, frame.Data.Buffer, frame.Data.Length, ref dst, tempVideoStride);
+                            }
+                            videoFrame.Codec = (int)OMTCodec.BGRA;
+                        }
+                    }
+                    else
+                    {
+                        if (preferredVideoFormat == OMTPreferredVideoFormat.UYVY | (preferredVideoFormat == OMTPreferredVideoFormat.UYVYorBGRA & (alpha == false)))
+                        {
+                            tempVideoStride = header.Width * 2;
+                            result = codec.Decode(VMXImageType.UYVY, frame.Data.Buffer, frame.Data.Length, ref dst, tempVideoStride);
+                            videoFrame.Codec = (int)OMTCodec.UYVY;
+                        }
+                        else if (preferredVideoFormat == OMTPreferredVideoFormat.BGRA | (preferredVideoFormat == OMTPreferredVideoFormat.UYVYorBGRA & alpha))
+                        {
+                            tempVideoStride = header.Width * 4;
+                            if (alpha)
+                            {
+                                result = codec.Decode(VMXImageType.BGRA, frame.Data.Buffer, frame.Data.Length, ref dst, tempVideoStride);
+                            } else
+                            {
+                                result = codec.Decode(VMXImageType.BGRX, frame.Data.Buffer, frame.Data.Length, ref dst, tempVideoStride);
+                            }                            
+                            videoFrame.Codec = (int)OMTCodec.BGRA;
+                        }
+                    }
+                    EndCodecTimer();
+
+                    if (result)
+                    {
+                        videoFrame.Type = OMTFrameType.Video;
+                        videoFrame.Timestamp = frame.Timestamp;
+                        videoFrame.Width = header.Width;
+                        videoFrame.Height = header.Height;
+                        videoFrame.Data = tempVideo.Pointer;
+                        videoFrame.DataLength = tempVideoStride * header.Height;
+                        videoFrame.Stride = tempVideoStride;
+
+                        if (tempCompressedVideo != IntPtr.Zero)
+                        {
+                            Marshal.Copy(frame.Data.Buffer, 0, tempCompressedVideo, frame.Data.Length);
+                        }
+                        videoFrame.CompressedData = tempCompressedVideo;
+                        videoFrame.CompressedLength = frame.Data.Length;
+                        videoFrame.Flags = flags;
+                        videoFrame.ColorSpace = (OMTColorSpace)header.ColorSpace;
+                        videoFrame.AspectRatio = header.AspectRatio;
+                        videoFrame.FrameRateN = header.FrameRateN;
+                        videoFrame.FrameRateD = header.FrameRateD;
+
+                        return true;
+                    }
+                    else
+                    {
+                        OMTLogging.Write("Unable to decode video at timestamp: " + frame.Timestamp, "OMTReceive.ReceiveVideo");
+                    }
+                }
+                else
+                {
+                    OMTLogging.Write("Unsupported audio codec: " + header.Codec, "OMTReceive.ReceiveVideo");
+                }
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Receive any available frames in the buffer, or wait for frames if empty
+        /// Returns true if a frame was found, false of timed out
+        /// </summary>
+        /// <param name="frameTypes">The frame types to receive</param>
+        /// <param name="millisecondsTimeout">The maximum time to wait for a new frame if empty</param>
+        /// <param name="outFrame">The frame struct to fill with the received data</param>
+        public bool Receive(OMTFrameType frameTypes, int millisecondsTimeout, ref OMTMediaFrame outFrame)
+        {
+            if (Exiting) return false;
+            OMTFrameBase frame = ReceiveInternal(frameTypes, millisecondsTimeout);
+            if (frame != null)
+            {
+                if (frame.FrameType == OMTFrameType.Video)
+                {
+                    return ReceiveVideo((OMTFrame)frame, ref outFrame);
+                }
+                else if (frame.FrameType == OMTFrameType.Audio)
+                {
+                    return ReceiveAudio((OMTFrame)frame, ref outFrame);
+                }
+                else if (frame.FrameType == OMTFrameType.Metadata)
+                {
+                    return ReceiveMetadata((OMTMetadata)frame, ref outFrame);
+                }
+            }
+            return false;
+        }
+        public void SetTally(OMTTally tally)
+        {
+            this.tally = tally;
+            SendTally();
+        }
+
+        internal override OMTTally GetTallyInternal()
+        {
+            OMTChannel ch = videoChannel;
+            if (ch == null) {
+                ch = audioChannel;
+            }
+            if (ch != null)
+            {
+                return ch.GetTally();
+            }
+            return new OMTTally();
+        }
+
+        public void SetFlags(OMTReceiveFlags flags)
+        {
+            if (this.flags != flags)
+            {
+                this.flags = flags;
+                SendPreview();
+            }
+        }
+
+        public string Address { get { return this.address;  } }
+
+        private void SendPreview()
+        {
+            if (flags.HasFlag(OMTReceiveFlags.Preview))
+            {
+                SendMetadata(new OMTMetadata(0, OMTMetadataConstants.CHANNEL_PREVIEW_VIDEO_ON));
+            }
+            else
+            {
+                SendMetadata(new OMTMetadata(0, OMTMetadataConstants.CHANNEL_PREVIEW_VIDEO_OFF));
+            }
+        }
+
+        private void SendTally()
+        {
+            SendMetadata(OMTMetadata.FromTally(tally));
+        }
+
+        public void SetSuggestedQuality(OMTQuality quality)
+        {
+            suggestedQuality = quality;
+            SendSuggestedQuality();
+        }
+
+        private void SendSuggestedQuality()
+        {
+            if (suggestedQuality == OMTQuality.Default)
+            {
+                SendMetadata(new OMTMetadata(0, OMTMetadataTemplates.SUGGESTED_QUALITY));
+            } else
+            {
+                string template = OMTMetadataTemplates.SUGGESTED_QUALITY.Replace("Default", suggestedQuality.ToString());
+                SendMetadata(new OMTMetadata(0, template));
+            }
+        }
+
+        private bool ReceiveAudio(OMTFrame frame, ref OMTMediaFrame audioFrame)
+        {
+            lock (audioLock)
+            {
+                if (Exiting) return false;
+                OMTAudioHeader header = frame.GetAudioHeader();
+                if (header.Codec == (int)OMTCodec.FPA1)
+                {
+                    int len = (header.SamplesPerChannel * header.Channels * OMTConstants.AUDIO_SAMPLE_SIZE);
+                    if (len <= OMTConstants.AUDIO_MAX_SIZE)
+                    {
+                        if (tempAudio == null)
+                        {
+                            tempAudio = new OMTPinnedBuffer(len);
+                        }
+                        else if (tempAudio.Length < len)
+                        {
+                            tempAudio.Dispose();
+                            tempAudio = new OMTPinnedBuffer(len);
+                        }
+                        tempAudio.SetBuffer(0, 0);
+                        audioCodec.Decode(frame.Data, header.Channels, header.SamplesPerChannel, (OMTActiveAudioChannels)header.ActiveChannels, tempAudio);
+                        audioFrame.Type = OMTFrameType.Audio;
+                        audioFrame.Timestamp = frame.Timestamp;
+                        audioFrame.SampleRate = header.SampleRate;
+                        audioFrame.Channels = header.Channels;
+                        audioFrame.SamplesPerChannel = header.SamplesPerChannel;
+                        audioFrame.Data = tempAudio.Pointer;
+                        audioFrame.DataLength = tempAudio.Length;
+                        return true;
+                    }
+                    else
+                    {
+                        OMTLogging.Write("InvalidAudioSize: " + len, "OMTReceive.ReceiveAudio");
+                    }
+                }
+                else
+                {
+                    OMTLogging.Write("Unsupported audio codec: " + header.Codec, "OMTReceive.ReceiveAudio");
+                }
+                return false;
+            }
+        }
+    }
+}

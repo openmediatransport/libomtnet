@@ -1,0 +1,28 @@
+var files_dup =
+[
+    [ "codecs", "dir_932c3ac8c9a286af8c6497883055b4fb.html", "dir_932c3ac8c9a286af8c6497883055b4fb" ],
+    [ "linux", "dir_88e6415a3128b404f1102a130772bdb6.html", "dir_88e6415a3128b404f1102a130772bdb6" ],
+    [ "mac", "dir_2ac391ad55c056cf22300c181fd83614.html", "dir_2ac391ad55c056cf22300c181fd83614" ],
+    [ "obj", "dir_43724e81dd40e09f32417973865cdd64.html", "dir_43724e81dd40e09f32417973865cdd64" ],
+    [ "tests", "dir_59425e443f801f1f2fd8bbe4959a3ccf.html", "dir_59425e443f801f1f2fd8bbe4959a3ccf" ],
+    [ "win32", "dir_b4f92dd377abba25bba37a57cb06d57a.html", "dir_b4f92dd377abba25bba37a57cb06d57a" ],
+    [ "OMTAddress.cs", "_o_m_t_address_8cs.html", "_o_m_t_address_8cs" ],
+    [ "OMTBase.cs", "_o_m_t_base_8cs.html", "_o_m_t_base_8cs" ],
+    [ "OMTBuffer.cs", "_o_m_t_buffer_8cs.html", null ],
+    [ "OMTChannel.cs", "_o_m_t_channel_8cs.html", null ],
+    [ "OMTClock.cs", "_o_m_t_clock_8cs.html", null ],
+    [ "OMTConstants.cs", "_o_m_t_constants_8cs.html", null ],
+    [ "OMTDiscovery.cs", "_o_m_t_discovery_8cs.html", "_o_m_t_discovery_8cs" ],
+    [ "OMTFrame.cs", "_o_m_t_frame_8cs.html", null ],
+    [ "OMTFramePool.cs", "_o_m_t_frame_pool_8cs.html", null ],
+    [ "OMTLogging.cs", "_o_m_t_logging_8cs.html", "_o_m_t_logging_8cs" ],
+    [ "OMTMetadata.cs", "_o_m_t_metadata_8cs.html", null ],
+    [ "OMTPlatform.cs", "_o_m_t_platform_8cs.html", "_o_m_t_platform_8cs" ],
+    [ "OMTPublicTypes.cs", "_o_m_t_public_types_8cs.html", "_o_m_t_public_types_8cs" ],
+    [ "OMTReceive.cs", "_o_m_t_receive_8cs.html", "_o_m_t_receive_8cs" ],
+    [ "OMTSend.cs", "_o_m_t_send_8cs.html", "_o_m_t_send_8cs" ],
+    [ "OMTSendReceiveBase.cs", "_o_m_t_send_receive_base_8cs.html", "_o_m_t_send_receive_base_8cs" ],
+    [ "OMTSettings.cs", "_o_m_t_settings_8cs.html", "_o_m_t_settings_8cs" ],
+    [ "OMTSocketAsyncPool.cs", "_o_m_t_socket_async_pool_8cs.html", null ],
+    [ "OMTUtils.cs", "_o_m_t_utils_8cs.html", "_o_m_t_utils_8cs" ]
+];

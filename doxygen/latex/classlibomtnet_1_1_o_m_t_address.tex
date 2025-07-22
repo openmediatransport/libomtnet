@@ -1,0 +1,175 @@
+\doxysection{libomtnet.\+OMTAddress Class Reference}
+\hypertarget{classlibomtnet_1_1_o_m_t_address}{}\label{classlibomtnet_1_1_o_m_t_address}\index{libomtnet.OMTAddress@{libomtnet.OMTAddress}}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classlibomtnet_1_1_o_m_t_address_a055b7cbb778a61fbaa74ce1dffa60877}{OMTAddress}} (string name, int port)
+\item 
+\mbox{\hyperlink{classlibomtnet_1_1_o_m_t_address_afc8140a3a63463b71a009bab624c811f}{OMTAddress}} (string machine\+Name, string name, int port, bool discovered)
+\item 
+bool \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_address_aa3f2372f09417fff73a8b0e3003aa33c}{Add\+Address}} (IPAddress address)
+\item 
+override string \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_address_a87bddcbeb276db5ff74f12dec279cfe4}{To\+String}} ()
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Static Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+static string \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_address_a78ef2b59ddf823a45afb206a0cee472f}{Escape\+Full\+Name}} (string full\+Name)
+\item 
+static string \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_address_ad6993e3037eeadf8b5afe55b564190d3}{Sanitize\+Name}} (string name)
+\item 
+static string \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_address_a475129c6c50596e6c55e852538e87e4a}{Unescape\+Full\+Name}} (string full\+Name)
+\item 
+static string \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_address_acc2ec0e8e0f30ed3ad316338c96ca2c9}{To\+String}} (string machine\+Name, string name)
+\item 
+static bool \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_address_ad17b80b9da561839607d94212f871428}{Is\+Valid}} (string full\+Name)
+\item 
+static \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_address}{OMTAddress}} \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_address_adf9b21b75926b7f088fa16f0c8d226e1}{Create}} (string full\+Name, int port, bool discovered)
+\item 
+static string \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_address_af12ef7677aeb7af5e0ef2f8265d4decf}{Get\+Machine\+Name}} (string full\+Name)
+\item 
+static string \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_address_a6c8dd673a66a3e563a52ab43768ff32c}{Get\+Name}} (string full\+Name)
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Properties}
+\begin{DoxyCompactItemize}
+\item 
+Date\+Time \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_address_a00da1414a5ec6cecf3ae2982bcc6e75c}{Expiry}}\hspace{0.3cm}{\ttfamily  \mbox{[}get, set\mbox{]}}
+\item 
+bool \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_address_a25ed6605857d551013b59979c54a75d0}{Discovered}}\hspace{0.3cm}{\ttfamily  \mbox{[}get\mbox{]}}
+\item 
+string \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_address_aa5ab181bed4bab89dcc4201e0c32ec50}{Machine\+Name}}\hspace{0.3cm}{\ttfamily  \mbox{[}get\mbox{]}}
+\item 
+string \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_address_aae3b92bf2a142515a49b4ab089fb45a1}{Name}}\hspace{0.3cm}{\ttfamily  \mbox{[}get\mbox{]}}
+\item 
+IPAddress\mbox{[}$\,$\mbox{]} \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_address_a362905a928f312e7171efa55c613b711}{Addresses}}\hspace{0.3cm}{\ttfamily  \mbox{[}get\mbox{]}}
+\item 
+int \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_address_a769c63d9e8b38743e7028065f390ba56}{Port}}\hspace{0.3cm}{\ttfamily  \mbox{[}get\mbox{]}}
+\end{DoxyCompactItemize}
+
+
+\label{doc-constructors}
+\Hypertarget{classlibomtnet_1_1_o_m_t_address_doc-constructors}
+\doxysubsection{Constructor \& Destructor Documentation}
+\Hypertarget{classlibomtnet_1_1_o_m_t_address_a055b7cbb778a61fbaa74ce1dffa60877}\index{libomtnet.OMTAddress@{libomtnet.OMTAddress}!OMTAddress@{OMTAddress}}
+\index{OMTAddress@{OMTAddress}!libomtnet.OMTAddress@{libomtnet.OMTAddress}}
+\doxysubsubsection{\texorpdfstring{OMTAddress()}{OMTAddress()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily \label{classlibomtnet_1_1_o_m_t_address_a055b7cbb778a61fbaa74ce1dffa60877} 
+libomtnet.\+OMTAddress.\+OMTAddress (\begin{DoxyParamCaption}\item[{string}]{name}{, }\item[{int}]{port}{}\end{DoxyParamCaption})}
+
+\Hypertarget{classlibomtnet_1_1_o_m_t_address_afc8140a3a63463b71a009bab624c811f}\index{libomtnet.OMTAddress@{libomtnet.OMTAddress}!OMTAddress@{OMTAddress}}
+\index{OMTAddress@{OMTAddress}!libomtnet.OMTAddress@{libomtnet.OMTAddress}}
+\doxysubsubsection{\texorpdfstring{OMTAddress()}{OMTAddress()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily \label{classlibomtnet_1_1_o_m_t_address_afc8140a3a63463b71a009bab624c811f} 
+libomtnet.\+OMTAddress.\+OMTAddress (\begin{DoxyParamCaption}\item[{string}]{machine\+Name}{, }\item[{string}]{name}{, }\item[{int}]{port}{, }\item[{bool}]{discovered}{}\end{DoxyParamCaption})}
+
+
+
+\label{doc-func-members}
+\Hypertarget{classlibomtnet_1_1_o_m_t_address_doc-func-members}
+\doxysubsection{Member Function Documentation}
+\Hypertarget{classlibomtnet_1_1_o_m_t_address_aa3f2372f09417fff73a8b0e3003aa33c}\index{libomtnet.OMTAddress@{libomtnet.OMTAddress}!AddAddress@{AddAddress}}
+\index{AddAddress@{AddAddress}!libomtnet.OMTAddress@{libomtnet.OMTAddress}}
+\doxysubsubsection{\texorpdfstring{AddAddress()}{AddAddress()}}
+{\footnotesize\ttfamily \label{classlibomtnet_1_1_o_m_t_address_aa3f2372f09417fff73a8b0e3003aa33c} 
+bool libomtnet.\+OMTAddress.\+Add\+Address (\begin{DoxyParamCaption}\item[{IPAddress}]{address}{}\end{DoxyParamCaption})}
+
+\Hypertarget{classlibomtnet_1_1_o_m_t_address_adf9b21b75926b7f088fa16f0c8d226e1}\index{libomtnet.OMTAddress@{libomtnet.OMTAddress}!Create@{Create}}
+\index{Create@{Create}!libomtnet.OMTAddress@{libomtnet.OMTAddress}}
+\doxysubsubsection{\texorpdfstring{Create()}{Create()}}
+{\footnotesize\ttfamily \label{classlibomtnet_1_1_o_m_t_address_adf9b21b75926b7f088fa16f0c8d226e1} 
+\mbox{\hyperlink{classlibomtnet_1_1_o_m_t_address}{OMTAddress}} libomtnet.\+OMTAddress.\+Create (\begin{DoxyParamCaption}\item[{string}]{full\+Name}{, }\item[{int}]{port}{, }\item[{bool}]{discovered}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{classlibomtnet_1_1_o_m_t_address_a78ef2b59ddf823a45afb206a0cee472f}\index{libomtnet.OMTAddress@{libomtnet.OMTAddress}!EscapeFullName@{EscapeFullName}}
+\index{EscapeFullName@{EscapeFullName}!libomtnet.OMTAddress@{libomtnet.OMTAddress}}
+\doxysubsubsection{\texorpdfstring{EscapeFullName()}{EscapeFullName()}}
+{\footnotesize\ttfamily \label{classlibomtnet_1_1_o_m_t_address_a78ef2b59ddf823a45afb206a0cee472f} 
+string libomtnet.\+OMTAddress.\+Escape\+Full\+Name (\begin{DoxyParamCaption}\item[{string}]{full\+Name}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{classlibomtnet_1_1_o_m_t_address_af12ef7677aeb7af5e0ef2f8265d4decf}\index{libomtnet.OMTAddress@{libomtnet.OMTAddress}!GetMachineName@{GetMachineName}}
+\index{GetMachineName@{GetMachineName}!libomtnet.OMTAddress@{libomtnet.OMTAddress}}
+\doxysubsubsection{\texorpdfstring{GetMachineName()}{GetMachineName()}}
+{\footnotesize\ttfamily \label{classlibomtnet_1_1_o_m_t_address_af12ef7677aeb7af5e0ef2f8265d4decf} 
+string libomtnet.\+OMTAddress.\+Get\+Machine\+Name (\begin{DoxyParamCaption}\item[{string}]{full\+Name}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{classlibomtnet_1_1_o_m_t_address_a6c8dd673a66a3e563a52ab43768ff32c}\index{libomtnet.OMTAddress@{libomtnet.OMTAddress}!GetName@{GetName}}
+\index{GetName@{GetName}!libomtnet.OMTAddress@{libomtnet.OMTAddress}}
+\doxysubsubsection{\texorpdfstring{GetName()}{GetName()}}
+{\footnotesize\ttfamily \label{classlibomtnet_1_1_o_m_t_address_a6c8dd673a66a3e563a52ab43768ff32c} 
+string libomtnet.\+OMTAddress.\+Get\+Name (\begin{DoxyParamCaption}\item[{string}]{full\+Name}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{classlibomtnet_1_1_o_m_t_address_ad17b80b9da561839607d94212f871428}\index{libomtnet.OMTAddress@{libomtnet.OMTAddress}!IsValid@{IsValid}}
+\index{IsValid@{IsValid}!libomtnet.OMTAddress@{libomtnet.OMTAddress}}
+\doxysubsubsection{\texorpdfstring{IsValid()}{IsValid()}}
+{\footnotesize\ttfamily \label{classlibomtnet_1_1_o_m_t_address_ad17b80b9da561839607d94212f871428} 
+bool libomtnet.\+OMTAddress.\+Is\+Valid (\begin{DoxyParamCaption}\item[{string}]{full\+Name}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{classlibomtnet_1_1_o_m_t_address_ad6993e3037eeadf8b5afe55b564190d3}\index{libomtnet.OMTAddress@{libomtnet.OMTAddress}!SanitizeName@{SanitizeName}}
+\index{SanitizeName@{SanitizeName}!libomtnet.OMTAddress@{libomtnet.OMTAddress}}
+\doxysubsubsection{\texorpdfstring{SanitizeName()}{SanitizeName()}}
+{\footnotesize\ttfamily \label{classlibomtnet_1_1_o_m_t_address_ad6993e3037eeadf8b5afe55b564190d3} 
+string libomtnet.\+OMTAddress.\+Sanitize\+Name (\begin{DoxyParamCaption}\item[{string}]{name}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{classlibomtnet_1_1_o_m_t_address_a87bddcbeb276db5ff74f12dec279cfe4}\index{libomtnet.OMTAddress@{libomtnet.OMTAddress}!ToString@{ToString}}
+\index{ToString@{ToString}!libomtnet.OMTAddress@{libomtnet.OMTAddress}}
+\doxysubsubsection{\texorpdfstring{ToString()}{ToString()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily \label{classlibomtnet_1_1_o_m_t_address_a87bddcbeb276db5ff74f12dec279cfe4} 
+override string libomtnet.\+OMTAddress.\+To\+String (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})}
+
+\Hypertarget{classlibomtnet_1_1_o_m_t_address_acc2ec0e8e0f30ed3ad316338c96ca2c9}\index{libomtnet.OMTAddress@{libomtnet.OMTAddress}!ToString@{ToString}}
+\index{ToString@{ToString}!libomtnet.OMTAddress@{libomtnet.OMTAddress}}
+\doxysubsubsection{\texorpdfstring{ToString()}{ToString()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily \label{classlibomtnet_1_1_o_m_t_address_acc2ec0e8e0f30ed3ad316338c96ca2c9} 
+string libomtnet.\+OMTAddress.\+To\+String (\begin{DoxyParamCaption}\item[{string}]{machine\+Name}{, }\item[{string}]{name}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+\Hypertarget{classlibomtnet_1_1_o_m_t_address_a475129c6c50596e6c55e852538e87e4a}\index{libomtnet.OMTAddress@{libomtnet.OMTAddress}!UnescapeFullName@{UnescapeFullName}}
+\index{UnescapeFullName@{UnescapeFullName}!libomtnet.OMTAddress@{libomtnet.OMTAddress}}
+\doxysubsubsection{\texorpdfstring{UnescapeFullName()}{UnescapeFullName()}}
+{\footnotesize\ttfamily \label{classlibomtnet_1_1_o_m_t_address_a475129c6c50596e6c55e852538e87e4a} 
+string libomtnet.\+OMTAddress.\+Unescape\+Full\+Name (\begin{DoxyParamCaption}\item[{string}]{full\+Name}{}\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+\label{doc-property-members}
+\Hypertarget{classlibomtnet_1_1_o_m_t_address_doc-property-members}
+\doxysubsection{Property Documentation}
+\Hypertarget{classlibomtnet_1_1_o_m_t_address_a362905a928f312e7171efa55c613b711}\index{libomtnet.OMTAddress@{libomtnet.OMTAddress}!Addresses@{Addresses}}
+\index{Addresses@{Addresses}!libomtnet.OMTAddress@{libomtnet.OMTAddress}}
+\doxysubsubsection{\texorpdfstring{Addresses}{Addresses}}
+{\footnotesize\ttfamily \label{classlibomtnet_1_1_o_m_t_address_a362905a928f312e7171efa55c613b711} 
+IPAddress \mbox{[}$\,$\mbox{]} libomtnet.\+OMTAddress.\+Addresses\hspace{0.3cm}{\ttfamily [get]}}
+
+\Hypertarget{classlibomtnet_1_1_o_m_t_address_a25ed6605857d551013b59979c54a75d0}\index{libomtnet.OMTAddress@{libomtnet.OMTAddress}!Discovered@{Discovered}}
+\index{Discovered@{Discovered}!libomtnet.OMTAddress@{libomtnet.OMTAddress}}
+\doxysubsubsection{\texorpdfstring{Discovered}{Discovered}}
+{\footnotesize\ttfamily \label{classlibomtnet_1_1_o_m_t_address_a25ed6605857d551013b59979c54a75d0} 
+bool libomtnet.\+OMTAddress.\+Discovered\hspace{0.3cm}{\ttfamily [get]}}
+
+\Hypertarget{classlibomtnet_1_1_o_m_t_address_a00da1414a5ec6cecf3ae2982bcc6e75c}\index{libomtnet.OMTAddress@{libomtnet.OMTAddress}!Expiry@{Expiry}}
+\index{Expiry@{Expiry}!libomtnet.OMTAddress@{libomtnet.OMTAddress}}
+\doxysubsubsection{\texorpdfstring{Expiry}{Expiry}}
+{\footnotesize\ttfamily \label{classlibomtnet_1_1_o_m_t_address_a00da1414a5ec6cecf3ae2982bcc6e75c} 
+Date\+Time libomtnet.\+OMTAddress.\+Expiry\hspace{0.3cm}{\ttfamily [get]}, {\ttfamily [set]}}
+
+\Hypertarget{classlibomtnet_1_1_o_m_t_address_aa5ab181bed4bab89dcc4201e0c32ec50}\index{libomtnet.OMTAddress@{libomtnet.OMTAddress}!MachineName@{MachineName}}
+\index{MachineName@{MachineName}!libomtnet.OMTAddress@{libomtnet.OMTAddress}}
+\doxysubsubsection{\texorpdfstring{MachineName}{MachineName}}
+{\footnotesize\ttfamily \label{classlibomtnet_1_1_o_m_t_address_aa5ab181bed4bab89dcc4201e0c32ec50} 
+string libomtnet.\+OMTAddress.\+Machine\+Name\hspace{0.3cm}{\ttfamily [get]}}
+
+\Hypertarget{classlibomtnet_1_1_o_m_t_address_aae3b92bf2a142515a49b4ab089fb45a1}\index{libomtnet.OMTAddress@{libomtnet.OMTAddress}!Name@{Name}}
+\index{Name@{Name}!libomtnet.OMTAddress@{libomtnet.OMTAddress}}
+\doxysubsubsection{\texorpdfstring{Name}{Name}}
+{\footnotesize\ttfamily \label{classlibomtnet_1_1_o_m_t_address_aae3b92bf2a142515a49b4ab089fb45a1} 
+string libomtnet.\+OMTAddress.\+Name\hspace{0.3cm}{\ttfamily [get]}}
+
+\Hypertarget{classlibomtnet_1_1_o_m_t_address_a769c63d9e8b38743e7028065f390ba56}\index{libomtnet.OMTAddress@{libomtnet.OMTAddress}!Port@{Port}}
+\index{Port@{Port}!libomtnet.OMTAddress@{libomtnet.OMTAddress}}
+\doxysubsubsection{\texorpdfstring{Port}{Port}}
+{\footnotesize\ttfamily \label{classlibomtnet_1_1_o_m_t_address_a769c63d9e8b38743e7028065f390ba56} 
+int libomtnet.\+OMTAddress.\+Port\hspace{0.3cm}{\ttfamily [get]}}
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+E\+:/\+OMT Projects/libomtnet/\mbox{\hyperlink{_o_m_t_address_8cs}{OMTAddress.\+cs}}\end{DoxyCompactItemize}

@@ -1,0 +1,74 @@
+\doxysection{E\+:/\+OMT Projects/libomtnet/\+OMTPublic\+Types.cs File Reference}
+\hypertarget{_o_m_t_public_types_8cs}{}\label{_o_m_t_public_types_8cs}\index{E:/OMT Projects/libomtnet/OMTPublicTypes.cs@{E:/OMT Projects/libomtnet/OMTPublicTypes.cs}}
+\doxysubsubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{structlibomtnet_1_1_o_m_t_statistics}{libomtnet.\+OMTStatistics}}
+\item 
+class \mbox{\hyperlink{classlibomtnet_1_1_o_m_t_sender_info}{libomtnet.\+OMTSender\+Info}}
+\item 
+struct \mbox{\hyperlink{structlibomtnet_1_1_o_m_t_media_frame}{libomtnet.\+OMTMedia\+Frame}}
+\begin{DoxyCompactList}\small\item\em Stores one frame of Video, Audio or Metadata. \end{DoxyCompactList}\item 
+struct \mbox{\hyperlink{structlibomtnet_1_1_o_m_t_size}{libomtnet.\+OMTSize}}
+\item 
+struct \mbox{\hyperlink{structlibomtnet_1_1_o_m_t_tally}{libomtnet.\+OMTTally}}
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Namespaces}
+\begin{DoxyCompactItemize}
+\item 
+namespace \mbox{\hyperlink{namespacelibomtnet}{libomtnet}}
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{namespacelibomtnet_a2807610fe76878a198a3f8644640931c}{libomtnet.\+OMTFrame\+Type}} \{ \mbox{\hyperlink{namespacelibomtnet_a2807610fe76878a198a3f8644640931ca6adf97f83acf6453d4a6a4b1070f3754}{libomtnet.\+None}} = 0
+, \mbox{\hyperlink{namespacelibomtnet_a2807610fe76878a198a3f8644640931cace21470ab49d1d1976bc3dc72438c183}{libomtnet.\+Metadata}} = 1
+, \mbox{\hyperlink{namespacelibomtnet_a2807610fe76878a198a3f8644640931ca34e2d1989a1dbf75cd631596133ee5ee}{libomtnet.\+Video}} = 2
+, \mbox{\hyperlink{namespacelibomtnet_a2807610fe76878a198a3f8644640931cab22f0418e8ac915eb66f829d262d14a2}{libomtnet.\+Audio}} = 4
+ \}
+\item 
+enum \mbox{\hyperlink{namespacelibomtnet_ace93383f3f8702bda254d097c2ee3aaf}{libomtnet.\+OMTVideo\+Flags}} \{ \newline
+\mbox{\hyperlink{namespacelibomtnet_ace93383f3f8702bda254d097c2ee3aafa6adf97f83acf6453d4a6a4b1070f3754}{libomtnet.\+None}} = 0
+, \mbox{\hyperlink{namespacelibomtnet_ace93383f3f8702bda254d097c2ee3aafa1aa9297bdff20cc8c265644ec5775f61}{libomtnet.\+Interlaced}} = 1
+, \mbox{\hyperlink{namespacelibomtnet_ace93383f3f8702bda254d097c2ee3aafa6132295fcf5570fb8b0a944ef322a598}{libomtnet.\+Alpha}} = 2
+, \mbox{\hyperlink{namespacelibomtnet_ace93383f3f8702bda254d097c2ee3aafa35f7a4d0017cc8c4ea4c3691caf1fdfa}{libomtnet.\+Pre\+Multiplied}} = 4
+, \newline
+\mbox{\hyperlink{namespacelibomtnet_ace93383f3f8702bda254d097c2ee3aafa31fde7b05ac8952dacf4af8a704074ec}{libomtnet.\+Preview}} = 8
+ \}
+\begin{DoxyCompactList}\small\item\em Flags set on video frames Interlaced\+: Frames are interlaced Alpha\+: Frames contain an alpha channel Pre\+Multiplied\+: When combined with Alpha, alpha channel is premultiplied, otherwise straight Preview\+: Frame is a special 1/8th preview frame. \end{DoxyCompactList}\item 
+enum \mbox{\hyperlink{namespacelibomtnet_a19fac4ae80eb14dec5571e43ed075aed}{libomtnet.\+OMTCodec}} \{ \newline
+\mbox{\hyperlink{namespacelibomtnet_a19fac4ae80eb14dec5571e43ed075aedafcc0416934a5024dd7bb5f2eea754c85}{libomtnet.\+VMX1}} = 0x31584\+D56
+, \mbox{\hyperlink{namespacelibomtnet_a19fac4ae80eb14dec5571e43ed075aedadc5616c5d924e95156465d2b63602d28}{libomtnet.\+FPA1}} = 0x31415046
+, \mbox{\hyperlink{namespacelibomtnet_a19fac4ae80eb14dec5571e43ed075aeda87261c567c007f283e17a5fc8c259296}{libomtnet.\+UYVY}} = 0x59565955
+, \mbox{\hyperlink{namespacelibomtnet_a19fac4ae80eb14dec5571e43ed075aedac4ae1e9efde614ab49c73b35107eefe1}{libomtnet.\+YUY2}} = 0x32595559
+, \newline
+\mbox{\hyperlink{namespacelibomtnet_a19fac4ae80eb14dec5571e43ed075aeda5a1fe3c61c9e2fd6dbbc823589f6e697}{libomtnet.\+BGRA}} = 0x41524742
+ \}
+\begin{DoxyCompactList}\small\item\em Supported Codecs\+: VMX1 = Fast video codec UYVY = 16bpp YUV format YUY2 = 16bpp YUV format YUYV pixel order BGRA = 32bpp RGBA format (Same as ARGB32 on Win32) FPA1 = Floating-\/point Planar Audio 32bit. \end{DoxyCompactList}\item 
+enum \mbox{\hyperlink{namespacelibomtnet_ae348d71e4544baf85aa122b9945b3ba0}{libomtnet.\+OMTPlatform\+Type}} \{ \mbox{\hyperlink{namespacelibomtnet_ae348d71e4544baf85aa122b9945b3ba0a88183b946cc5f0e8c96b2e66e1c74a7e}{libomtnet.\+Unknown}} = 0
+, \mbox{\hyperlink{namespacelibomtnet_ae348d71e4544baf85aa122b9945b3ba0aa99913111481b4f0bcb70e08e3e99405}{libomtnet.\+Win32}} = 1
+, \mbox{\hyperlink{namespacelibomtnet_ae348d71e4544baf85aa122b9945b3ba0a0a5b7edb55b772c60bfa8af868b679cf}{libomtnet.\+Mac\+OS}} = 2
+, \mbox{\hyperlink{namespacelibomtnet_ae348d71e4544baf85aa122b9945b3ba0aedc9f0a5a5d57797bf68e37364743831}{libomtnet.\+Linux}} = 3
+ \}
+\item 
+enum \mbox{\hyperlink{namespacelibomtnet_a3a9b4d59f9ced35f9b15fd72302c5acb}{libomtnet.\+OMTColor\+Space}} \{ \mbox{\hyperlink{namespacelibomtnet_a3a9b4d59f9ced35f9b15fd72302c5acbaec0fc0100c4fc1ce4eea230c3dc10360}{libomtnet.\+Undefined}} = 0
+, \mbox{\hyperlink{namespacelibomtnet_a3a9b4d59f9ced35f9b15fd72302c5acba8b844879ae7dc4d0447f1986a7432db9}{libomtnet.\+BT601}} = 601
+, \mbox{\hyperlink{namespacelibomtnet_a3a9b4d59f9ced35f9b15fd72302c5acba0b69475c5783f10c0be13d36825fc3b9}{libomtnet.\+BT709}} = 709
+ \}
+\item 
+enum \mbox{\hyperlink{namespacelibomtnet_af6daf021ac3275c6024ea49306b28b4b}{libomtnet.\+OMTPreferred\+Video\+Format}} \{ \mbox{\hyperlink{namespacelibomtnet_af6daf021ac3275c6024ea49306b28b4ba87261c567c007f283e17a5fc8c259296}{libomtnet.\+UYVY}} = 0
+, \mbox{\hyperlink{namespacelibomtnet_af6daf021ac3275c6024ea49306b28b4baeb37f9b150738df9d508ad5b846c8694}{libomtnet.\+UYVYor\+BGRA}} = 1
+, \mbox{\hyperlink{namespacelibomtnet_af6daf021ac3275c6024ea49306b28b4ba5a1fe3c61c9e2fd6dbbc823589f6e697}{libomtnet.\+BGRA}} = 2
+ \}
+\begin{DoxyCompactList}\small\item\em Specify the preferred uncompressed video format of decoded frames UYVY is always the fastest, if no alpha channel is required. UYVYor\+BGRA will provide BGRA only when alpha channel is present. BGRA will always convert back to BGRA. \end{DoxyCompactList}\item 
+enum \mbox{\hyperlink{namespacelibomtnet_ac88105a7cf19610d56b98f6c0daef72d}{libomtnet.\+OMTReceive\+Flags}} \{ \mbox{\hyperlink{namespacelibomtnet_ac88105a7cf19610d56b98f6c0daef72da6adf97f83acf6453d4a6a4b1070f3754}{libomtnet.\+None}} = 0
+, \mbox{\hyperlink{namespacelibomtnet_ac88105a7cf19610d56b98f6c0daef72da31fde7b05ac8952dacf4af8a704074ec}{libomtnet.\+Preview}} = 1
+, \mbox{\hyperlink{namespacelibomtnet_ac88105a7cf19610d56b98f6c0daef72dab81c3e8e7a3e311b5e3ad7914a6f5f6d}{libomtnet.\+Include\+Compressed}} = 2
+ \}
+\begin{DoxyCompactList}\small\item\em Flags to enable certain features on a Receiver Preview\+: Receive only a 1/8th preview of the video. Include\+Compressed\+: Include a copy of the compressed VMX video frames for further processing or recording. \end{DoxyCompactList}\item 
+enum \mbox{\hyperlink{namespacelibomtnet_a215dee679f7d8e252717a6189f976f14}{libomtnet.\+OMTQuality}} \{ \mbox{\hyperlink{namespacelibomtnet_a215dee679f7d8e252717a6189f976f14a7a1920d61156abc05a60135aefe8bc67}{libomtnet.\+Default}} = 0
+, \mbox{\hyperlink{namespacelibomtnet_a215dee679f7d8e252717a6189f976f14a28d0edd045e05cf5af64e35ae0c4c6ef}{libomtnet.\+Low}} = 1
+, \mbox{\hyperlink{namespacelibomtnet_a215dee679f7d8e252717a6189f976f14a87f8a6ab85c9ced3702b4ea641ad4bb5}{libomtnet.\+Medium}} = 50
+, \mbox{\hyperlink{namespacelibomtnet_a215dee679f7d8e252717a6189f976f14a655d20c1ca69519ca647684edbb2db35}{libomtnet.\+High}} = 100
+ \}
+\begin{DoxyCompactList}\small\item\em Specify the video encoding quality. If set to Default, the Sender is configured to allow suggestions from all Receivers. The highest suggestion amongst all receivers is then selected. If a Receiver is set to Default, then it will defer the quality to whatever is set amongst other Receivers. \end{DoxyCompactList}\end{DoxyCompactItemize}

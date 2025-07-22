@@ -1,0 +1,151 @@
+﻿using System;
+using System.IO;
+using System.Net;
+using System.Runtime.InteropServices;
+using System.Text;
+
+namespace libomtnet
+{
+    public class OMTUtils
+    {
+        internal static IPAddress[] ResolveHostname(string hostname)
+        {
+            try
+            {
+                return Dns.GetHostAddresses(hostname);
+            }
+            catch (Exception ex)
+            {
+                OMTLogging.Write(ex.ToString(), "OMTUtils.ResolveHostname");
+            }
+            return null;
+        }
+
+        public static IntPtr StringToPtrUTF8(string s)
+        {
+            IntPtr dst = Marshal.AllocHGlobal(s.Length + 1);
+            WriteStringToPtrUTF8(s, dst);
+            return dst;
+        }
+
+        public static void WriteStringToPtrUTF8(string s, IntPtr dst)
+        {
+            byte[] b = UTF8Encoding.UTF8.GetBytes(s);
+            Marshal.Copy(b, 0, dst, b.Length);
+            Marshal.WriteByte(dst, b.Length, 0);
+        }
+
+        public static string PtrToStringUTF8(IntPtr ptr)
+        {
+            using (MemoryStream m = new MemoryStream())
+            {
+                int offset = 0;
+                while (true)
+                {
+                    byte b = Marshal.ReadByte(ptr, offset);
+                    if (b == 0) break;
+                    m.WriteByte(b);
+                    offset++;
+                }
+                return UTF8Encoding.UTF8.GetString(m.ToArray());
+            }
+        }
+
+        public static void InterleavedToPlanarAudio32F32F(int numSamples, int channels, int sampleStride, float[] src, float[] dst)
+        {
+            int offset = 0;
+            for (int i = 0; i < numSamples; i++)
+            {
+                for (int c = 0; c < channels; c++)
+                {
+                    dst[(sampleStride * c) + i] = src[offset];
+                    offset += 1;
+                }
+            }
+        }
+        public static void InterleavedToPlanarAudio1632F(int numSamples, int channels, int sampleStride, short[] src, float[] dst)
+        {
+            int offset = 0;
+            for (int i = 0; i < numSamples; i++)
+            {
+                for (int c = 0; c < channels; c++)
+                {
+                    float s = src[offset];
+                    dst[(sampleStride * c) + i] = s / short.MaxValue;
+                    offset += 1;
+                }
+            }
+        }
+
+        public static IntPtr XMLToIntPtr(string xml, ref int length)
+        {
+            byte[] utf8 = UTF8Encoding.UTF8.GetBytes(xml);
+            length = utf8.Length + 1;
+            IntPtr data = Marshal.AllocHGlobal(length);
+            Marshal.Copy(utf8, 0, data, utf8.Length);
+            Marshal.WriteByte(data, utf8.Length, 0);
+            return data;
+        }
+
+        public static string IntPtrToXML(IntPtr ptr, int length)
+        {
+            if (ptr != IntPtr.Zero && length > 0)
+            {
+                byte[] b = new byte[length];
+                Marshal.Copy(ptr, b, 0, length);
+                string xml = UTF8Encoding.UTF8.GetString(b);
+                return xml;
+            }
+            return null;
+        }
+
+        public static void FreeXMLIntPtr(IntPtr x)
+        {
+            if (x != IntPtr.Zero)
+            {
+                Marshal.FreeHGlobal(x);
+            }
+        }
+
+        public static float ToFrameRate(int frameRateN, int frameRateD)
+        {
+            if (frameRateD == 0) return 0;
+            double d = (double)frameRateN / (double)frameRateD;
+            d = Math.Round(d, 2);
+            return (float)d;
+        }
+
+        public static void FromFrameRate(float fps, ref int frameRateN, ref int frameRateD)
+        {
+            switch (Math.Round(fps, 2))
+            {
+                case 29.97:
+                    frameRateN = 30000;
+                    frameRateD = 1001;
+                    break;
+                case 59.94:
+                    frameRateN = 60000;
+                    frameRateD = 1001;
+                    break;
+                case 119.88:
+                    frameRateN = 120000;
+                    frameRateD = 1001;
+                    break;
+                case 239.76:
+                    frameRateN = 240000;
+                    frameRateD = 1001;
+                    break;
+                case 23.98:
+                case 23.976:
+                    frameRateN = 24000;
+                    frameRateD = 1001;
+                    break;
+                default:
+                    frameRateN = (int)fps;
+                    frameRateD = 1;
+                    break;
+            }
+        }
+
+    }
+}
