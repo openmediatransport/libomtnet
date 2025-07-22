@@ -1,0 +1,418 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Runtime.InteropServices;
+using System.Diagnostics;
+using System.Data;
+using System.Net;
+using System.Collections;
+using System.Runtime.CompilerServices;
+using System.Threading;
+
+namespace libomtnet.win32
+{
+    /// <summary>
+    /// DnsApi on Windows requires a few workarounds documented here:
+    /// 1. Entries are not automatically deregistered when the process exits. This leads to many stray entries if a process did not close cleanly.
+    ///    Workaround: We check for any of these on ports we control, and remove them manually.
+    /// 2. Duplicate entries are renamed by the API automatically. 
+    ///    Workaround: We retrieve the instance again after the registration completes so we know what the new name is.
+    /// 3. The API will notify of a Ttl of 0 when a source is deregistered, however these sources return with a longer Ttl in any new processes started thereafter.
+    ///    Workaround: We track the Ttl and remove from list once finally drops to 0.
+    /// 4. The API will not always notify in time for the Ttl (or at all) even if the source is still live. 
+    ///    Workaround: A Ttl < 60 seems a reliable indicator we can expire the item.
+    /// </summary>
+    internal class OMTDiscoveryWin32 : OMTDiscovery
+    {       
+
+        private DnsApi.DnsServiceRegisterComplete registerCallback;
+        private DnsApi.DnsServiceBrowseCallback browseCallback;
+        private DnsApi.PDNS_SERVICE_CANCEL browseCancel;
+
+        private class EntryWin32 : OMTDiscoveryEntry
+        {
+            public DnsApi.PDNS_SERVICE_REGISTER_REQUEST RegisterRequest;
+            public DnsApi.PDNS_SERVICE_CANCEL RegisterCancel;
+            public bool Cancelling = false;
+            public EntryWin32(OMTAddress address) : base(address)
+            {
+
+            }
+            public void CancelRegister()
+            {
+                if (Cancelling == false)
+                {
+                    if (RegisterCancel.reserved != IntPtr.Zero)
+                    {
+                        Cancelling = true;
+                        DnsApi.DnsServiceRegisterCancel(ref RegisterCancel);
+                        RegisterCancel.reserved = IntPtr.Zero;
+                        Cancelling = false;
+                        Debug.WriteLine("CancelRegister");
+                    }
+                }
+            }
+            protected override void DisposeInternal()
+            {
+                base.DisposeInternal();
+                if (RegisterRequest.pServiceInstance != null)
+                {
+                    Marshal.DestroyStructure(RegisterRequest.pServiceInstance, typeof(DnsApi.PDNS_SERVICE_INSTANCE));
+                    Marshal.FreeHGlobal(RegisterRequest.pServiceInstance);
+                    RegisterRequest.pServiceInstance = IntPtr.Zero;
+                }
+                CancelRegister(); //Run this after handle is freed, since it ends up calling OnComplete which in turn would call dispose again
+            }
+        }
+
+        internal OMTDiscoveryWin32()
+        {
+            browseCallback = new DnsApi.DnsServiceBrowseCallback(OnBrowse);
+            registerCallback = new DnsApi.DnsServiceRegisterComplete(OnComplete);
+            BeginDNSBrowse();
+        }
+
+        internal void BeginDNSBrowse()
+        {            
+            DnsApi.PDNS_SERVICE_BROWSE_REQUEST request = new DnsApi.PDNS_SERVICE_BROWSE_REQUEST();
+            request.InterfaceIndex = 0;
+            request.Version = DnsApi.DNS_QUERY_REQUEST_VERSION1;
+            request.QueryName = "_omt._tcp.local";
+            request.pBrowseCallback = Marshal.GetFunctionPointerForDelegate(browseCallback);
+            
+            browseCancel = new DnsApi.PDNS_SERVICE_CANCEL();
+            int hr = DnsApi.DnsServiceBrowse(ref request, ref browseCancel);
+            if (hr == DnsApi.DNS_REQUEST_PENDING)
+            {
+                OMTLogging.Write("BeginDNSBrowse.OK", "OMTDiscoveryWin32");
+            }
+            else
+            {
+                OMTLogging.Write("BeginDNSBrowse.Error: " + hr, "OMTDiscoveryWin32");
+            }
+        }
+
+        internal void EndDnsBrowse()
+        {
+            if (browseCancel.reserved != null)
+            {
+                DnsApi.DnsServiceBrowseCancel(ref browseCancel);
+                browseCancel.reserved = IntPtr.Zero;
+                OMTLogging.Write("EndDNSBrowse", "OMTDiscoveryWin32");
+            }
+        }
+
+        private DnsApi.PDNS_SERVICE_REGISTER_REQUEST CreateRegisterRequest(string name, string machineName, int port)
+        {
+            DnsApi.PDNS_SERVICE_INSTANCE instance = new DnsApi.PDNS_SERVICE_INSTANCE();
+            instance.dwInterfaceIndex = 0;
+            instance.dwPropertyCount = 0;
+            instance.ip4Address = IntPtr.Zero;
+            instance.ip6Address = IntPtr.Zero;
+            instance.pszInstanceName = OMTAddress.EscapeFullName(name) + "._omt._tcp.local";
+            instance.pszHostName = machineName + ".local";
+            instance.wPort = (ushort)port;
+            instance.wPriority = 0;
+            instance.wWeight = 0;
+
+            DnsApi.PDNS_SERVICE_REGISTER_REQUEST request = new DnsApi.PDNS_SERVICE_REGISTER_REQUEST();
+            request.Version = DnsApi.DNS_QUERY_REQUEST_VERSION1;
+            request.InterfaceIndex = 0;
+            request.pServiceInstance = Marshal.AllocHGlobal(Marshal.SizeOf(instance));
+            Marshal.StructureToPtr(instance, request.pServiceInstance, false);
+            request.pRegisterCompletionCallback = Marshal.GetFunctionPointerForDelegate(registerCallback);
+            request.unicastEnabled = false;
+            return request;
+        }
+
+        internal void DeRegisterAddressManual(OMTAddress address)
+        {
+            lock (lockSync)
+            {
+                DnsApi.PDNS_SERVICE_REGISTER_REQUEST request = CreateRegisterRequest(address.ToString(), address.MachineName, address.Port);
+                EntryWin32 qr = new EntryWin32(address);
+                qr.RegisterRequest = request;
+                qr.RegisterRequest.pQueryContext = IntPtr.Zero;
+                int hr = DnsApi.DnsServiceDeRegister(ref qr.RegisterRequest, IntPtr.Zero);
+                if (hr == DnsApi.DNS_REQUEST_PENDING)
+                {
+                    OMTLogging.Write("DeRegister.Manual: " + address.ToString() + ":" + address.Port, "OMTDiscoveryWin32");
+                }
+                qr.Dispose();
+            }
+        }
+
+        private void DeRegisterAddressFromContext(EntryWin32 request)
+        {
+            request.RegisterRequest.pQueryContext = request.ToIntPtr();
+            int hr = DnsApi.DnsServiceDeRegister(ref request.RegisterRequest, IntPtr.Zero);
+            if (hr == DnsApi.DNS_REQUEST_PENDING)
+            {
+                request.ChangeStatus(OMTDiscoveryEntryStatus.PendingDeRegister);
+                OMTLogging.Write("DeRegister.Pending: " + request.Address.ToString() + ":" + request.Address.Port, "OMTDiscoveryWin32");
+            }
+            else
+            {
+                OMTLogging.Write("DeRegister.Error: " + request.Address.ToString() + ":" + request.Address.Port + ": " + hr, "OMTDiscoveryWin32");
+                RemoveEntry(request.Address, true);
+            }
+        }
+
+        internal override bool DeregisterAddress(OMTAddress address)
+        {
+            try
+            {
+                lock (lockSync)
+                {
+                    OMTDiscoveryEntry request = GetEntry(address);
+                    if (request != null)
+                    {
+                        if (request.Status == OMTDiscoveryEntryStatus.PendingRegisterAfterDeRegister)
+                        {
+                            request.ChangeStatus(OMTDiscoveryEntryStatus.PendingDeRegister);
+                            return true;
+                        } else if (request.Status == OMTDiscoveryEntryStatus.PendingRegister)
+                        {
+                            request.ChangeStatus(OMTDiscoveryEntryStatus.PendingDeRegisterAfterRegister);
+                            return true;
+                        } else if (request.Status != OMTDiscoveryEntryStatus.Registered)
+                        {
+                            return false;
+                        }
+                        if (request.Status != OMTDiscoveryEntryStatus.Discovered)
+                        {
+                            DeRegisterAddressFromContext((EntryWin32)request);
+                        }
+                        return true;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                OMTLogging.Write(ex.ToString(), "OMTDiscoveryWin32");
+            }
+            return false;
+        }        
+        internal override bool RegisterAddress(OMTAddress address)
+        {
+            lock (lockSync)
+            {
+                OMTDiscoveryEntry ctx = GetEntry(address);
+                if (ctx != null)
+                {
+                    if (ctx.Status ==  OMTDiscoveryEntryStatus.PendingDeRegisterAfterRegister)
+                    {
+                        ctx.ChangeStatus(OMTDiscoveryEntryStatus.PendingRegister);
+                        OMTLogging.Write("Register.CancelDeRegister: " + address.ToString() + ":" + address.Port, "OMTDiscoveryWin32");
+                    } else if (ctx.Status ==  OMTDiscoveryEntryStatus.PendingDeRegister) 
+                    {
+                        ctx.ChangeStatus(OMTDiscoveryEntryStatus.PendingRegisterAfterDeRegister);
+                        OMTLogging.Write("Register.Restore: " + address.ToString() + ":" + address.Port, "OMTDiscoveryWin32");
+                    } else if (ctx.Status == OMTDiscoveryEntryStatus.Discovered)
+                    {
+                        DeRegisterAddressManual(address);
+                        OMTLogging.Write("Register.OverrideExistingEntry: " + address.ToString() + ":" + address.Port, "OMTDiscoveryWin32");
+                        RemoveEntry(address, true);
+                        ctx = null;
+                    }
+                }
+                if (ctx == null)
+                {
+                    DnsApi.PDNS_SERVICE_REGISTER_REQUEST request = CreateRegisterRequest(address.ToString(), address.MachineName, address.Port);
+                    EntryWin32 q = new EntryWin32(address);
+                    q.RegisterRequest = request;
+                    q.RegisterRequest.pQueryContext = q.ToIntPtr();
+                    int hr = DnsApi.DnsServiceRegister(ref q.RegisterRequest, ref q.RegisterCancel);
+                    if (hr == DnsApi.DNS_REQUEST_PENDING)
+                    {
+                        q.ChangeStatus(OMTDiscoveryEntryStatus.PendingRegister);
+                        AddEntry(q);
+                        OMTLogging.Write("Register.Pending: " + address.ToString() + ":" + address.Port, "OMTDiscoveryWin32");
+                    }
+                    else
+                    {
+                        q.Dispose();
+                        OMTLogging.Write("Register.Error: " + address.ToString() + ":" + address.Port + ": " +  hr, "OMTDiscoveryWin32");
+                    }
+                    return true;
+                }
+                return false;
+            }
+        }
+        protected override void DisposeInternal()
+        {
+            EndDnsBrowse();
+            base.DisposeInternal();
+        }
+
+        void OnComplete(uint status, IntPtr pQueryContext, IntPtr instance)
+        {
+            try
+            {
+                if (pQueryContext != IntPtr.Zero)
+                {
+                    EntryWin32 q = (EntryWin32)OMTDiscoveryEntry.FromIntPtr(pQueryContext);
+                    if (q != null)
+                    {
+                        if (q.Cancelling)
+                        {
+                            return;
+                        }
+                        lock (lockSync)
+                        {
+                            if (q.Status == OMTDiscoveryEntryStatus.PendingDeRegister || q.Status == OMTDiscoveryEntryStatus.PendingRegisterAfterDeRegister)
+                            {
+                                if (status == 0)
+                                {
+                                    OMTLogging.Write("DeRegister.Complete: " + q.Address.ToString() + ":" + q.Address.Port, "OMTDiscoveryWin32");
+                                }
+                                else
+                                {
+                                    OMTLogging.Write("DeRegister.Error: " + q.Address.ToString() + ":" + q.Address.Port + ": " + status, "OMTDiscoveryWin32");
+                                }
+                                RemoveEntry(q.Address, true);
+                                if (q.Status == OMTDiscoveryEntryStatus.PendingRegisterAfterDeRegister)
+                                {
+                                    RegisterAddress(q.Address);
+                                }
+                            }
+                            else if (q.Status ==  OMTDiscoveryEntryStatus.PendingRegister || q.Status ==  OMTDiscoveryEntryStatus.PendingDeRegisterAfterRegister)
+                            {
+                                if (status == 0)
+                                {
+                                    q.ChangeStatus(OMTDiscoveryEntryStatus.Registered);
+                                    if (instance != IntPtr.Zero)
+                                    {
+                                        DnsApi.PDNS_SERVICE_INSTANCE i = (DnsApi.PDNS_SERVICE_INSTANCE)Marshal.PtrToStructure(instance, typeof(DnsApi.PDNS_SERVICE_INSTANCE));
+                                        if (q.RegisterRequest.pServiceInstance != null)
+                                        {                                                                                        
+                                            //We need to update here as the DNS service may rename the dns name due to duplicates. We need that new name to deregister properly.
+                                            Marshal.StructureToPtr(i, q.RegisterRequest.pServiceInstance, true);
+                                        }
+                                    }
+                                    if (q.Status ==  OMTDiscoveryEntryStatus.PendingDeRegisterAfterRegister)
+                                    {
+                                        OMTLogging.Write("Register.DeRegister: " + q.Address.ToString() + ":" + q.Address.Port, "OMTDiscoveryWin32");
+                                        DeRegisterAddressFromContext(q);
+                                    } else
+                                    {
+                                        OMTLogging.Write("Register.Complete: " + q.Address.ToString() + ":" + q.Address.Port, "OMTDiscoveryWin32");
+                                    }
+                                }
+                                else
+                                {
+                                    OMTLogging.Write("RegisterAddress.Error: " + q.Address.ToString() + ":" + q.Address.Port + ": " + status, "OMTDiscoveryWin32");
+                                    RemoveEntry(q.Address, true);
+                                }
+                            }
+                        }
+                        
+                    }
+                }
+                if (instance != IntPtr.Zero)
+                {
+                    DnsApi.DnsServiceFreeInstance(instance);
+                }
+            }
+            catch (Exception ex)
+            {
+                OMTLogging.Write(ex.ToString(), "OMTDiscoveryWin32");
+            }
+        }
+        void OnBrowse(uint status, IntPtr pQueryContext, IntPtr pDnsRecord)
+        {
+            if (pDnsRecord != null)
+            {
+                try
+                {
+                    string addressName = "";
+                    int addressPort = 0;
+                    IntPtr pNext = pDnsRecord;
+                    List<IPAddress> addresses = new List<IPAddress>();
+                    int dwTtl = 0;
+                    while (pNext != IntPtr.Zero)
+                    {
+                        string name = Marshal.PtrToStringUni(Marshal.ReadIntPtr(pNext, IntPtr.Size));
+                        DnsApi.DNS_TYPE wType = (DnsApi.DNS_TYPE)Marshal.ReadInt16(pNext, IntPtr.Size * 2);
+                        if (wType == DnsApi.DNS_TYPE.DNS_TYPE_SRV)
+                        {
+                            string[] s = name.Split('.');
+                            addressName = s[0];
+                            byte[] b = new byte[2];
+                            Marshal.Copy(pNext + (IntPtr.Size * 3) + 16 + 4, b, 0, 2);
+                            addressPort = BitConverter.ToUInt16(b, 0);
+                            dwTtl = Marshal.ReadInt32(pNext, (IntPtr.Size * 2) + 8);
+                        }
+                        else if (wType == DnsApi.DNS_TYPE.DNS_TYPE_A)
+                        {
+                            byte[] b = new byte[4];
+                            Marshal.Copy(pNext + (IntPtr.Size * 2) + 16, b, 0, b.Length);
+                            IPAddress ip = new IPAddress(b);
+                            addresses.Add(ip);
+                        }
+                        else if (wType == DnsApi.DNS_TYPE.DNS_TYPE_AAAA)
+                        {
+                            byte[] b = new byte[16];
+                            Marshal.Copy(pNext + (IntPtr.Size * 2) + 16, b, 0, b.Length);
+                            IPAddress ip = new IPAddress(b);
+                            addresses.Add(ip);
+                        }
+                        else if (wType == DnsApi.DNS_TYPE.DNS_TYPE_PTR)
+                        {
+                            string nameHost = Marshal.PtrToStringUni(Marshal.ReadIntPtr(pNext, (IntPtr.Size * 2) + 16));
+                            if (!String.IsNullOrEmpty(nameHost))
+                            {
+                                dwTtl = Marshal.ReadInt32(pNext, (IntPtr.Size * 2) + 8);
+                                string[] s = nameHost.Split('.');
+                                addressName = s[0];
+                            }
+                        }
+                        pNext = Marshal.ReadIntPtr(pNext);
+                    }
+                    if (OMTAddress.IsValid(addressName) && ((addressPort > 0) || dwTtl == 0))
+                    {
+                        addressName = OMTAddress.UnescapeFullName(addressName);
+
+                        //Sometimes when a process closes the discovery entry is not properly deleted
+                        //If we know the discovered entry is no longer valid due to using the same port, we manually de-register it here
+                        OMTDiscoveryEntry portMatch = GetEntryByPort(addressPort, false);
+                        if (portMatch != null)
+                        {
+                            OMTAddress address = OMTAddress.Create(addressName, addressPort);
+                            if (portMatch.Address.MachineName == address.MachineName && portMatch.Address.ToString() != address.ToString())
+                            {
+                                OMTLogging.Write("DuplicatePort: " + address.ToString() + ":" + addressPort, "OMTDiscoveryWin32");
+                                DeRegisterAddressManual(address);
+                            }
+                        }
+
+                        if (dwTtl == 0)
+                        {
+                            RemoveDiscoveredEntry(addressName);
+                        } else
+                        {
+                           OMTDiscoveryEntry entry = UpdateDiscoveredEntry(addressName, addressPort, addresses.ToArray());
+                            if (entry != null)
+                            {
+                                if (dwTtl < 60)
+                                {
+                                    entry.Expiry = DateTime.Now.AddSeconds(dwTtl);
+                                }
+                                else
+                                {
+                                    entry.Expiry = DateTime.MinValue;
+                                }
+                            } 
+                        }
+                    }
+                    DnsApi.DnsFree(pDnsRecord, DnsApi.DNS_FREE_TYPE.DnsFreeRecordList);
+                    RemoveExpiredAddresses();
+                }
+                catch (Exception ex)
+                {
+                    OMTLogging.Write(ex.ToString(), "OMTDiscoveryWin32");
+                }
+            }
+        }
+    }
+}
