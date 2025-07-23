@@ -9,6 +9,21 @@ libomt is a native compiled version of the .NET library and is available separat
 
 ## Getting Started
 
+### Installation
+
+Official binary releases for Windows and MacOS can be found in the Releases section of this repository.
+
+There are only two dependencies when using this library in a .NET app:
+
+**libomtnet.dll**
+This is a cross platform file that will work on Windows, Mac and Linux
+
+**libvmx.dll (Windows)**
+**libvmx.dylib (MacOS)**
+**libvmx.so (Linux)**
+
+These are platform specific native shared libraries. The correct library for the CPU type and OS platform needs to be placed in the same directory as the application.
+
 ### Creating a Source
 
 1. Create an instance of the OMTSend class specifying a name
