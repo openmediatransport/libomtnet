@@ -1,0 +1,1 @@
+dotnet build ../libomtnet.sln -c Release
