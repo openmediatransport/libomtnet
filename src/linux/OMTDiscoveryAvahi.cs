@@ -162,7 +162,7 @@ namespace libomtnet.linux
             base.DisposeInternal();
         }
 
-        internal override bool DeregisterAddress(OMTAddress address)
+        internal override bool DeregisterAddressInternal(OMTAddress address)
         {
             lock (lockSync)
             {
@@ -176,7 +176,7 @@ namespace libomtnet.linux
                 return false;
             }
         }
-        internal override bool RegisterAddress(OMTAddress address)
+        internal override bool RegisterAddressInternal(OMTAddress address)
         {
             lock (lockSync)
             {

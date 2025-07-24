@@ -66,6 +66,9 @@ namespace libomtnet
         private ConnectionState videoConnectionState = null;
         private ConnectionState audioConnectionState = null;
 
+        private OMTDiscovery discovery = null;
+        private OMTDiscoveryClient discoveryClient = null;
+
         private class ConnectionState
         {
             public OMTFrameType frameType;
@@ -134,9 +137,18 @@ namespace libomtnet
             {
                 tempCompressedVideo = Marshal.AllocHGlobal(OMTConstants.VIDEO_MAX_SIZE);
             }
+            discovery = OMTDiscovery.GetInstance();
             BeginConnect();
-            OMTDiscovery discovery = OMTDiscovery.GetInstance();
             discovery.Subscribe(this);
+        }
+
+        internal OMTReceive(string address, OMTDiscoveryClient discoveryClient)
+        {
+            this.discoveryClient = discoveryClient;
+            SetupWaitHandles();
+            this.frameTypes = OMTFrameType.Metadata;
+            this.address = address;
+            BeginConnect();
         }
 
         public override OMTStatistics GetVideoStatistics()
@@ -186,8 +198,9 @@ namespace libomtnet
 
         protected override void DisposeInternal()
         {
-            OMTDiscovery discovery = OMTDiscovery.GetInstance();
             if (discovery != null) discovery.Unsubscribe(this);
+            discovery = null;
+            discoveryClient = null;
 
             if (videoHandle != null) videoHandle.Set();
             if (audioHandle != null) audioHandle.Set();
@@ -251,10 +264,17 @@ namespace libomtnet
 
         private void BeginConnect()
         {
-            OMTDiscovery discovery = OMTDiscovery.GetInstance();
             if (discovery != null)
             {
                 OMTAddress address = discovery.FindByFullNameOrUrl(this.address);
+                if (address != null)
+                {
+                    BeginConnect(address);
+                }
+            }
+            else
+            {
+                OMTAddress address = OMTDiscovery.CreateFromUrl(this.address);
                 if (address != null)
                 {
                     BeginConnect(address);
@@ -287,7 +307,7 @@ namespace libomtnet
                             if (frameTypes == OMTFrameType.Metadata && videoConnectionState == null)
                             {
                                 OMTLogging.Write("ConnectingMetadata: " + address.ToString() + ":" + address.Port, "OMTReceive.BeginConnect");
-                                videoConnectionState = BeginConnect(OMTFrameType.Video, address.Addresses, address.Port);
+                                videoConnectionState = BeginConnect(OMTFrameType.Metadata, address.Addresses, address.Port);
                             }
                         }
                     }
@@ -317,7 +337,7 @@ namespace libomtnet
                     {
                         if (cs.frameType == OMTFrameType.Video)
                         {
-                            this.videoChannel = new OMTChannel(cs.socket, OMTFrameType.Video, videoHandle, metadataHandle);
+                            this.videoChannel = new OMTChannel(cs.socket, OMTFrameType.Video, videoHandle, metadataHandle,false);
                             this.videoChannel.Changed += Channel_Changed;
                             this.videoChannel.StartReceive();
                             this.videoChannel.Send(new OMTMetadata(0, OMTMetadataConstants.CHANNEL_SUBSCRIBE_METADATA));
@@ -334,7 +354,7 @@ namespace libomtnet
                         }
                         if (cs.frameType == OMTFrameType.Audio)
                         {
-                            this.audioChannel = new OMTChannel(cs.socket, OMTFrameType.Audio, audioHandle, metadataHandle);
+                            this.audioChannel = new OMTChannel(cs.socket, OMTFrameType.Audio, audioHandle, metadataHandle,false);
                             this.audioChannel.Changed += Channel_Changed;
                             this.audioChannel.StartReceive();
                             if (frameTypes.HasFlag(OMTFrameType.Video) == false)
@@ -343,14 +363,25 @@ namespace libomtnet
                             }
                             this.audioChannel.Send(new OMTMetadata(0, OMTMetadataConstants.CHANNEL_SUBSCRIBE_AUDIO));
                         }
+                        if (cs.frameType == OMTFrameType.Metadata)
+                        {
+                            this.videoChannel = new OMTChannel(cs.socket, OMTFrameType.Metadata, videoHandle, metadataHandle, false);
+                            this.videoChannel.Changed += Channel_Changed;
+                            this.videoChannel.StartReceive();
+                            this.videoChannel.Send(new OMTMetadata(0, OMTMetadataConstants.CHANNEL_SUBSCRIBE_METADATA));
+                        }
                         OMTLogging.Write("Connected: " + address.ToString(), "OMTReceive.Connect");
+                        if (discoveryClient != null)
+                        {
+                            discoveryClient.Connected();
+                        }
                     }
                 }
                 catch (Exception ex)
                 {
                     OMTLogging.Write(ex.ToString(), "OMTReceive.Connect");
                 }
-                if (cs.frameType == OMTFrameType.Video)
+                if (cs.frameType == OMTFrameType.Video || cs.frameType == OMTFrameType.Metadata)
                 {
                     videoConnectionState = null;
                 }
@@ -488,7 +519,7 @@ namespace libomtnet
             return frame;
         }
 
-        private int SendMetadata(OMTMetadata metadata)
+        internal int SendMetadata(OMTMetadata metadata)
         {
             OMTChannel ch = null;
             if (videoChannel != null)
@@ -501,7 +532,7 @@ namespace libomtnet
             }
             if (ch != null)
             {
-               return ch.Send(metadata);
+                return ch.Send(metadata);
             }
             return 0;
         }
@@ -678,6 +709,19 @@ namespace libomtnet
             }
             return false;
         }
+
+        internal bool Receive(int millisecondsTimeout, ref OMTMetadata metadata)
+        {
+            if (Exiting) return false;
+            OMTFrameBase frame = ReceiveInternal(OMTFrameType.Metadata, millisecondsTimeout);
+            if (frame != null)
+            {
+                metadata = (OMTMetadata)frame;
+                return true;
+            }
+            return false;
+        }
+
         public void SetTally(OMTTally tally)
         {
             this.tally = tally;

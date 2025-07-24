@@ -26,6 +26,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Net;
+using System.Xml;
+using System.IO;
 
 namespace libomtnet
 {
@@ -35,8 +37,8 @@ namespace libomtnet
         private readonly string machineName;
         private readonly int port;
         private IPAddress[] addresses = { };
-        private DateTime expiry = DateTime.MinValue;
         private const int MAX_FULLNAME_LENGTH = 63;
+        internal bool removed = false;
 
         public OMTAddress(string name, int port)
         {
@@ -67,11 +69,14 @@ namespace libomtnet
             {
                 if (oversize < this.name.Length)
                 {
-                    OMTLogging.Write("TruncatedNameBefore: " + this.name, "OMTAddress");
                     this.name = this.name.Substring(0, this.name.Length - oversize).Trim();
-                    OMTLogging.Write("TruncatedName: " + this.name, "OMTAddress");
                 }
             }
+        }
+
+        public void ClearAddresses()
+        {
+            addresses = new IPAddress[]{ };
         }
 
         public bool AddAddress(IPAddress address)
@@ -223,6 +228,75 @@ namespace libomtnet
                 return name;
             }
             return "";
+        }
+
+        public string ToXML()
+        {
+            StringWriter sw = new StringWriter();
+            XmlTextWriter t = new XmlTextWriter(sw);
+            t.Formatting = Formatting.Indented;
+            t.WriteStartElement(OMTMetadataTemplates.ADDRESS_NAME);
+            t.WriteElementString("Name", ToString());
+            t.WriteElementString("Port", port.ToString());
+            if (removed)
+            {
+                t.WriteElementString("Removed", "True");
+            }
+            t.WriteStartElement("Addresses");
+            foreach (IPAddress ip in addresses)
+            {
+                t.WriteElementString("IPAddress", ip.ToString());
+            }
+            t.WriteEndElement();
+            t.WriteEndElement();
+            t.Close();
+            return sw.ToString();
+        }
+
+        public static OMTAddress FromXML(string xml)
+        {
+            XmlDocument doc = OMTMetadataUtils.TryParse(xml);
+            if (doc != null)
+            {
+                XmlNode e = doc.DocumentElement;
+                if (e != null)
+                {
+                    if (e.Name == OMTMetadataTemplates.ADDRESS_NAME)
+                    {
+                        XmlNode nm = e.SelectSingleNode("Name");
+                        if (nm != null)
+                        {
+                            XmlNode prt = e.SelectSingleNode("Port");
+                            if (prt != null)
+                            {
+                                int port = int.Parse(prt.InnerText);
+                                OMTAddress a = OMTAddress.Create(nm.InnerText, port);
+                                if (a != null)
+                                {
+                                    foreach (XmlNode ipn in e.SelectNodes("Addresses/IPAddress"))
+                                    {
+                                        IPAddress ip = null;
+                                        if (IPAddress.TryParse(ipn.InnerText, out ip))
+                                        {
+                                            a.AddAddress(ip);
+                                        }
+                                    }
+                                    XmlNode del = e.SelectSingleNode("Removed");
+                                    if (del != null)
+                                    {
+                                        if (del.InnerText.ToLower() == "true")
+                                        {
+                                            a.removed = true;
+                                        }
+                                    }
+                                    return a;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return null;
         }
 
     }

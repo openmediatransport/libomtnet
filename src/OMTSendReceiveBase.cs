@@ -83,7 +83,19 @@ namespace libomtnet
             if (e.Type == OMTEventType.TallyChanged)
             {
                 UpdateTally();
+            } else if (e.Type == OMTEventType.Disconnected)
+            {
+                if (sender != null)
+                {
+                    OMTChannel ch = (OMTChannel)sender;
+                    OnDisconnected(ch);
+                }
             }
+        }
+
+        internal virtual void OnDisconnected(OMTChannel ch)
+        {
+
         }
 
         internal virtual void OnTallyChanged( OMTTally tally)

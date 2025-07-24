@@ -44,12 +44,27 @@ namespace libomtnet
 
         static OMTLogging()
         {
-            string name = GetProcessNameAndId();
-            if (name != null)
+            try
             {
-                string szPath = OMTPlatform.GetInstance().GetStoragePath();
-                if (Directory.Exists(szPath) == false) { Directory.CreateDirectory(szPath); }
-                SetFilename(szPath + Path.DirectorySeparatorChar + name + ".log");
+                string name = GetProcessNameAndId();
+                if (name != null)
+                {
+                    string szPath = OMTPlatform.GetInstance().GetStoragePath();
+                    if (Directory.Exists(szPath) == false)
+                    {
+                        Directory.CreateDirectory(szPath);
+                    }
+                    szPath = szPath + Path.DirectorySeparatorChar + "logs";
+                    if (Directory.Exists(szPath) == false)
+                    {
+                        Directory.CreateDirectory(szPath);
+                    }
+                    SetFilename(szPath + Path.DirectorySeparatorChar + name + ".log");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.ToString());
             }
             loggingThread = new Thread(ProcessLog);
             loggingThread.IsBackground = true;
@@ -107,11 +122,14 @@ namespace libomtnet
                 {
                     logStream.Close();
                 }
-                logStream = new FileStream(filename,FileMode.OpenOrCreate, FileAccess.Write);
-                logStream.Position = logStream.Length;
-                logWriter = new StreamWriter(logStream);
-                logWriter.AutoFlush = true;
-                Debug.WriteLine("OMTLogging.SetFilename: " + filename);
+                logWriter = null;
+                if (!String.IsNullOrEmpty(filename)) {
+                    logStream = new FileStream(filename, FileMode.OpenOrCreate, FileAccess.Write);
+                    logStream.Position = logStream.Length;
+                    logWriter = new StreamWriter(logStream);
+                    logWriter.AutoFlush = true;
+                    OMTLogging.Write("Log Started", "OMTLogging");
+                }
             }
         }
         public static void Write(string message, string source)

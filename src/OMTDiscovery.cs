@@ -45,9 +45,30 @@ namespace libomtnet
         private static OMTDiscovery instance = null;
         private DateTime lastCleared;
 
+        private OMTDiscoveryClient discoveryClient = null;
+
         protected OMTDiscovery()
         {
             entries = new List<OMTDiscoveryEntry>();
+            try
+            {
+                OMTSettings settings = OMTSettings.GetInstance();
+                string server = settings.GetString("DiscoveryServer", "");
+                if (!String.IsNullOrEmpty(server))
+                {
+                    discoveryClient = new OMTDiscoveryClient(server, this);
+                }
+            }
+            catch (Exception ex)
+            {
+                OMTLogging.Write(ex.ToString(), "OMTDiscovery");
+            }
+        }
+
+        internal bool IsUsingServer()
+        {
+            if (discoveryClient == null) return false;
+            return true;
         }
 
         ///<summary>
@@ -261,49 +282,106 @@ namespace libomtnet
             return false;
         }
 
-        internal virtual bool DeregisterAddress(OMTAddress address)
+        internal virtual bool DeregisterAddressInternal(OMTAddress address)
+        {
+            return DeregisterAddressDefault(address);
+        }
+        internal virtual bool RegisterAddressInternal(OMTAddress address)
+        {
+            return RegisterAddressDefault(address);
+        }
+
+        private bool RegisterAddressDefault(OMTAddress address)
+        {
+            lock (lockSync)
+            {
+                OMTDiscoveryEntry entry = GetEntry(address);
+                if (entry != null)
+                {
+                    if (entry.Status == OMTDiscoveryEntryStatus.Discovered)
+                    {
+                        RemoveEntry(address, true);
+                        entry = null;
+                    }
+                }
+                if (entry == null)
+                {
+                    entry = new OMTDiscoveryEntry(address);
+                    AddEntry(entry);
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        private bool DeregisterAddressDefault(OMTAddress address)
         {
             return RemoveEntry(address, true);
         }
-        internal virtual bool RegisterAddress(OMTAddress address)
+
+        internal bool RegisterAddress(OMTAddress address)
         {
-            OMTDiscoveryEntry entry = GetEntry(address);
-            if (entry == null)
+            if (IsUsingServer())
             {
-                entry = new OMTDiscoveryEntry(address);
-                AddEntry(entry);
-                return true;
+                if (RegisterAddressDefault(address))
+                {
+                    address.removed = false;
+                    discoveryClient.SendAddress(address);
+                    return true;
+                }
+                return false;
             }
-            return false;
+            return RegisterAddressInternal(address);
         }
+
+        internal bool DeregisterAddress(OMTAddress address)
+        {
+            if (IsUsingServer())
+            {
+                if (DeregisterAddressDefault(address))
+                {
+                    address.removed = true;
+                    discoveryClient.SendAddress(address);
+                    return true;
+                }
+                return false;
+            }
+            return DeregisterAddressInternal(address);
+        }
+
+        static internal OMTAddress CreateFromUrl(string address)
+        {
+            Uri u = null;
+            if (Uri.TryCreate(address, UriKind.Absolute, out u))
+            {
+                if (u.Port > 0)
+                {
+                    OMTAddress a = new OMTAddress(u.Host, u.Port.ToString(), u.Port);
+                    IPAddress[] ips = OMTUtils.ResolveHostname(u.Host);
+                    if (ips != null && ips.Length > 0)
+                    {
+                        foreach (IPAddress ip in ips)
+                        {
+                            a.AddAddress(ip);
+                        }
+                        return a;
+                    }
+                }
+            }
+            return null;
+        }
+
         internal OMTAddress FindByFullNameOrUrl(string address)
         {
             if (string.IsNullOrEmpty(address)) { return null; }
             if (address.ToLower().StartsWith(OMTConstants.URL_PREFIX))
             {
-                Uri u = null;
-                if (Uri.TryCreate(address, UriKind.Absolute, out u))
-                {
-                    if (u.Port > 0)
-                    {
-                        OMTAddress a = new OMTAddress(u.Host, u.Port.ToString(), u.Port);
-                        IPAddress[] ips = OMTUtils.ResolveHostname(u.Host);
-                        if (ips != null && ips.Length > 0)
-                        {
-                            foreach (IPAddress ip in ips)
-                            {
-                                a.AddAddress(ip);
-                            }
-                            return a;
-                        }
-                    }
-                }
+                return CreateFromUrl(address);
             }
             else
             {
                 return FindByFullName(address);
             }
-            return null;
         }
         internal OMTAddress FindByFullName(string fullName)
         {
@@ -398,6 +476,21 @@ namespace libomtnet
             return addresses;
         }
 
+        internal OMTAddress[] GetAddressesInternal()
+        {
+            List<OMTAddress> a = new List<OMTAddress>();
+            lock (lockSync)
+            {
+                foreach (OMTDiscoveryEntry rr in entries)
+                {
+                    if (rr.Status != OMTDiscoveryEntryStatus.Discovered)
+                    {
+                        a.Add(rr.Address);
+                    } 
+                }
+            }
+            return a.ToArray();
+        }
 
         private void DisposeEntries()
         {
@@ -424,6 +517,11 @@ namespace libomtnet
 
         protected override void DisposeInternal()
         {
+            if (discoveryClient != null)
+            {
+                discoveryClient.Dispose();
+                discoveryClient = null;
+            }
             DisposeEntries();
             base.DisposeInternal();
         }

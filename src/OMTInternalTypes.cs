@@ -29,7 +29,8 @@ namespace libomtnet
 {    internal enum OMTEventType
     {
         None = 0,
-        TallyChanged = 1
+        TallyChanged = 1,
+        Disconnected = 2
     }
 
     internal class OMTEventArgs : EventArgs

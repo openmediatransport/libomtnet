@@ -178,7 +178,7 @@ namespace libomtnet.win32
             }
         }
 
-        internal override bool DeregisterAddress(OMTAddress address)
+        internal override bool DeregisterAddressInternal(OMTAddress address)
         {
             try
             {
@@ -213,7 +213,7 @@ namespace libomtnet.win32
             }
             return false;
         }        
-        internal override bool RegisterAddress(OMTAddress address)
+        internal override bool RegisterAddressInternal(OMTAddress address)
         {
             lock (lockSync)
             {
@@ -293,7 +293,7 @@ namespace libomtnet.win32
                                 RemoveEntry(q.Address, true);
                                 if (q.Status == OMTDiscoveryEntryStatus.PendingRegisterAfterDeRegister)
                                 {
-                                    RegisterAddress(q.Address);
+                                    RegisterAddressInternal(q.Address);
                                 }
                             }
                             else if (q.Status ==  OMTDiscoveryEntryStatus.PendingRegister || q.Status ==  OMTDiscoveryEntryStatus.PendingDeRegisterAfterRegister)
@@ -301,6 +301,7 @@ namespace libomtnet.win32
                                 if (status == 0)
                                 {
                                     q.ChangeStatus(OMTDiscoveryEntryStatus.Registered);
+                                    q.RegisterCancel.reserved = IntPtr.Zero;
                                     if (instance != IntPtr.Zero)
                                     {
                                         DnsApi.PDNS_SERVICE_INSTANCE i = (DnsApi.PDNS_SERVICE_INSTANCE)Marshal.PtrToStructure(instance, typeof(DnsApi.PDNS_SERVICE_INSTANCE));

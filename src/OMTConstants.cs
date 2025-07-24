@@ -39,6 +39,10 @@ namespace libomtnet
         public static int NETWORK_ASYNC_BUFFER_AV = 1048576;
         public static int NETWORK_ASYNC_BUFFER_META = 65536;
 
+        //For OMTDiscoveryServer
+        public static int NETWORK_ASYNC_COUNT_META_ONLY = 64;
+        public static int NETWORK_ASYNC_BUFFER_META_ONLY = 1024;
+
         public static int VIDEO_FRAME_POOL_COUNT = 4;
 
         public static int VIDEO_MIN_SIZE = 65536;

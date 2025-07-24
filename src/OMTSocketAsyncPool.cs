@@ -107,15 +107,6 @@ namespace libomtnet
             return null;
         }
 
-        public int GetAvailableBufferSize()
-        {
-            lock (lockSync)
-            {
-                if (pool == null) return 0;
-                return pool.Count * this.bufferSize;
-            }
-        }
-
         public int Count { get { lock (pool)  { return pool.Count; } } }
 
         internal void ReturnEventArgs(SocketAsyncEventArgs e)

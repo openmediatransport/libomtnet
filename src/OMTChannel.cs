@@ -52,6 +52,7 @@ namespace libomtnet
         private OMTTally tally;
         private bool preview;
         private object lockSync = new object();
+        private object sendSync = new object();
         private OMTQuality suggestedQuality = OMTQuality.Default;
         private OMTSenderInfo senderInfo = null;
         private IPEndPoint endPoint = null;
@@ -63,7 +64,7 @@ namespace libomtnet
 
         public IPEndPoint RemoteEndPoint { get { return endPoint; } }
 
-        public OMTChannel(Socket sck, OMTFrameType receiveFrameType, AutoResetEvent frameReady, AutoResetEvent metadataReady)
+        public OMTChannel(Socket sck, OMTFrameType receiveFrameType, AutoResetEvent frameReady, AutoResetEvent metadataReady, bool metadataServer)
         {
             socket = sck;
             endPoint = (IPEndPoint)sck.RemoteEndPoint;
@@ -82,27 +83,30 @@ namespace libomtnet
             receiveargs = new SocketAsyncEventArgs();
             receiveargs.Completed += Receive_Completed;
 
-            int sendPoolBufferSize = 0;
             int poolCount = 1;
             int startingFrameSize = 0;
             if (receiveFrameType == OMTFrameType.Video)
             {
                 poolCount = OMTConstants.VIDEO_FRAME_POOL_COUNT;
                 startingFrameSize = OMTConstants.VIDEO_MIN_SIZE;
-                sendPoolBufferSize = OMTConstants.NETWORK_ASYNC_BUFFER_META;
                 receiveargs.SetBuffer(new byte[OMTConstants.VIDEO_MAX_SIZE], 0, OMTConstants.VIDEO_MAX_SIZE);
             } else if (receiveFrameType == OMTFrameType.Audio) {
                 poolCount = OMTConstants.AUDIO_FRAME_POOL_COUNT;
                 startingFrameSize = OMTConstants.AUDIO_MIN_SIZE;
-                sendPoolBufferSize = OMTConstants.NETWORK_ASYNC_BUFFER_META;
                 receiveargs.SetBuffer(new byte[OMTConstants.AUDIO_MAX_SIZE], 0, OMTConstants.AUDIO_MAX_SIZE);
             } else {
                 poolCount = 1;
                 startingFrameSize = OMTConstants.AUDIO_MIN_SIZE;
-                sendPoolBufferSize = OMTConstants.NETWORK_ASYNC_BUFFER_AV;
                 receiveargs.SetBuffer(new byte[OMTConstants.AUDIO_MAX_SIZE], 0, OMTConstants.AUDIO_MAX_SIZE);
             }
-            sendpool = new OMTSocketAsyncPool(OMTConstants.NETWORK_ASYNC_COUNT, sendPoolBufferSize);
+            int sendPoolCount = OMTConstants.NETWORK_ASYNC_COUNT;
+            int startingSendPoolSize = OMTConstants.AUDIO_MIN_SIZE;
+            if (metadataServer)
+            {
+                sendPoolCount = OMTConstants.NETWORK_ASYNC_COUNT_META_ONLY;
+                startingSendPoolSize = OMTConstants.NETWORK_ASYNC_BUFFER_META_ONLY;
+            }
+            sendpool = new OMTSocketAsyncPool(sendPoolCount, startingSendPoolSize);
             framePool = new OMTFramePool(poolCount, startingFrameSize, true);
 
             readyFrames = new Queue<OMTFrame>();
@@ -167,48 +171,52 @@ namespace libomtnet
 
         public int Send(OMTFrame frame)
         {
-            int written = 0;
-            try
+            lock (sendSync)
             {
-                if ((frame.FrameType != OMTFrameType.Metadata) && (subscriptions & frame.FrameType) != frame.FrameType)
+                if (Exiting) return 0;
+                int written = 0;
+                try
                 {
-                    return 0;
+                    if ((frame.FrameType != OMTFrameType.Metadata) && (subscriptions & frame.FrameType) != frame.FrameType)
+                    {
+                        return 0;
+                    }
+                    frame.SetPreviewMode(preview);
+                    int length = frame.Length;
+                    if (length > OMTConstants.VIDEO_MAX_SIZE)
+                    {
+                        statistics.FramesDropped += 1;
+                        Debug.WriteLine("OMTChannel.Send.DroppedOversizedFrame");
+                        return 0;
+                    }
+                    SocketAsyncEventArgs e = sendpool.GetEventArgs();
+                    if (e == null)
+                    {
+                        statistics.FramesDropped += 1;
+                        Debug.WriteLine("OMTChannel.Send.DroppedFrame");
+                        return 0;
+                    }
+                    sendpool.Resize(e, length);
+                    frame.WriteHeaderTo(e.Buffer, 0, e.Count);
+                    int headerLength = frame.HeaderLength + frame.ExtendedHeaderLength;
+                    frame.WriteDataTo(e.Buffer, 0, headerLength, length - headerLength);
+                    e.SetBuffer(0, length);
+                    sendpool.SendAsync(socket, e);
+                    written = length;
+                    if (frame.FrameType != OMTFrameType.Metadata)
+                    {
+                        statistics.Frames += 1;
+                        statistics.FramesSinceLast += 1;
+                    }
+                    statistics.BytesSent += written;
+                    statistics.BytesSentSinceLast += written;
                 }
-                frame.SetPreviewMode(preview);
-                int length = frame.Length;
-                if (length > OMTConstants.VIDEO_MAX_SIZE)
+                catch (Exception ex)
                 {
-                    statistics.FramesDropped += 1;
-                    Debug.WriteLine("OMTChannel.Send.DroppedOversizedFrame");
-                    return 0;
+                    OMTLogging.Write(ex.ToString(), "OMTChannel.Send");
                 }
-                SocketAsyncEventArgs e = sendpool.GetEventArgs();
-                if (e == null )
-                {
-                    statistics.FramesDropped += 1;
-                    Debug.WriteLine("OMTChannel.Send.DroppedFrame");
-                    return 0;
-                }
-                sendpool.Resize(e, length);
-                frame.WriteHeaderTo(e.Buffer, 0, e.Count);
-                int headerLength = frame.HeaderLength + frame.ExtendedHeaderLength;
-                frame.WriteDataTo(e.Buffer, 0, headerLength, length - headerLength);
-                e.SetBuffer(0, length);
-                sendpool.SendAsync(socket, e);
-                written = length;
-                if (frame.FrameType != OMTFrameType.Metadata)
-                {
-                    statistics.Frames += 1;
-                    statistics.FramesSinceLast += 1;
-                }
-                statistics.BytesSent += written;
-                statistics.BytesSentSinceLast += written;
-            }
-            catch (Exception ex)
-            {
-                OMTLogging.Write(ex.ToString(), "OMTChannel.Send");
-            }
-            return written;
+                return written;
+            }            
         }
 
         public int ReadyFrameCount { get
@@ -236,14 +244,14 @@ namespace libomtnet
 
         public OMTFrame ReceiveFrame()
         {
-            if (Exiting) return null;
-            if (lastReadFrame != null)
-            {
-                framePool.Return(lastReadFrame);
-                lastReadFrame = null;            
-            }          
             lock (readyFrames)
             {
+                if (Exiting) return null;
+                if (lastReadFrame != null)
+                {
+                    framePool.Return(lastReadFrame);
+                    lastReadFrame = null;
+                }
                 if (readyFrames.Count > 0)
                 {
                     lastReadFrame = readyFrames.Dequeue();
@@ -256,6 +264,7 @@ namespace libomtnet
         {
             lock (metadatas)
             {
+                if (Exiting) return null;
                 if (metadatas.Count > 0)
                 {
                     return metadatas.Dequeue();
@@ -354,7 +363,7 @@ namespace libomtnet
                 {
                     if (metadatas.Count < OMTConstants.METADATA_MAX_COUNT)
                     {
-                        metadatas.Enqueue(new OMTMetadata(frame.Timestamp, xml));
+                        metadatas.Enqueue(new OMTMetadata(frame.Timestamp, xml, endPoint));
                     }
                     if (metadataReadyEvent != null)
                     {
@@ -454,6 +463,7 @@ namespace libomtnet
                     {
                         OMTLogging.Write("SocketClosing: " + e.SocketError.ToString() + "," + e.BytesTransferred,"OMTChannel.Receive");
                         CloseSocket();
+                        OnEvent(OMTEventType.Disconnected);
                     }
                 }                
             }
@@ -488,6 +498,12 @@ namespace libomtnet
 
         protected override void DisposeInternal()
         {
+            lock (sendSync) { }
+            lock (readyFrames) { }
+            lock (metadatas)
+            {
+                metadatas.Clear();
+            }
             CloseSocket();
             if (lastReadFrame != null)
             {

@@ -30,6 +30,7 @@ using System.Net.Sockets;
 using libomtnet.codecs;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Diagnostics;
 
 namespace libomtnet
 {
@@ -40,6 +41,7 @@ namespace libomtnet
         private OMTChannel[] channels = { };
         private object channelsLock = new object();
         private OMTDiscovery discovery;
+        private OMTDiscoveryServer discoveryServer;
 
         private OMTFrame tempVideo;
         private OMTFrame tempAudio;
@@ -53,6 +55,22 @@ namespace libomtnet
 
         private OMTClock videoClock;
         private OMTClock audioClock;
+
+        private bool metadataServer = false;
+
+        internal OMTSend(IPEndPoint endpoint, OMTDiscoveryServer discoveryServer)
+        {
+            this.metadataServer = true;
+            this.discoveryServer = discoveryServer;
+            metadataHandle = new AutoResetEvent(false);
+            listenEvent = new SocketAsyncEventArgs();
+            listenEvent.Completed += OnAccept;
+            this.listener = new Socket(AddressFamily.InterNetworkV6, SocketType.Stream, ProtocolType.Tcp);
+            this.listener.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
+            this.listener.Bind(endpoint);
+            this.listener.Listen(5);
+            BeginAccept();
+        }
 
         /// <summary>
         /// Create a new instance of the OMT Sender
@@ -78,6 +96,7 @@ namespace libomtnet
             OMTSettings settings = OMTSettings.GetInstance();
             int startPort = settings.GetInteger("NetworkPortStart", OMTConstants.NETWORK_PORT_START);
             int endPort = settings.GetInteger("NetworkPortEnd", OMTConstants.NETWORK_PORT_END);
+
             for (int i = startPort; i <= endPort; i++)
             {
                 try
@@ -95,12 +114,12 @@ namespace libomtnet
                     }
                 }
             }
+
             BeginAccept();
             IPEndPoint ip = (IPEndPoint)this.listener.LocalEndPoint;
             this.address = new OMTAddress(name, ip.Port);
             this.address.AddAddress(IPAddress.Loopback);
-            this.discovery.RegisterAddress(address);
-        }
+            this.discovery.RegisterAddress(address);        }
 
         public override OMTStatistics GetVideoStatistics()
         {
@@ -177,7 +196,9 @@ namespace libomtnet
             if (discovery != null)
             {
                 discovery.DeregisterAddress(address);
+                discovery = null;
             }
+            discoveryServer = null;
             if (listener != null)
             {
                 listener.Dispose();
@@ -272,7 +293,7 @@ namespace libomtnet
                     try
                     {
                         socket = e.AcceptSocket;
-                        channel = new OMTChannel(socket, OMTFrameType.Metadata, null, metadataHandle);
+                        channel = new OMTChannel(socket, OMTFrameType.Metadata, null, metadataHandle, metadataServer);
                         channel.StartReceive();
                         if (senderInfoXml != null)
                         {
@@ -295,6 +316,9 @@ namespace libomtnet
                             socket.Dispose();
                         }
                     }
+                }
+                if (!Exiting)
+                {
                     BeginAccept();
                 }
             }
@@ -325,8 +349,12 @@ namespace libomtnet
             }
             channel.Changed += Channel_Changed;
             UpdateTally();
+            if (discoveryServer != null)
+            {
+                discoveryServer.Connected(channel.RemoteEndPoint);
+            }
         }
-        internal void RemoveChannel(OMTChannel channel)
+        internal bool RemoveChannel(OMTChannel channel)
         {
             lock (channelsLock)
             {
@@ -334,25 +362,45 @@ namespace libomtnet
                 {
                     List<OMTChannel> list = new List<OMTChannel>();
                     list.AddRange(channels);
-                    list.Remove(channel);
-                    channels = list.ToArray();
-                    channel.Changed -= Channel_Changed;
-                    channel.Dispose();
+                    if (list.Contains(channel))
+                    {
+                        list.Remove(channel);
+                        channels = list.ToArray();
+                        channel.Changed -= Channel_Changed;
+                        channel.Dispose();
+                        OMTLogging.Write("RemoveConnection", "OMTSend.RemoveChannel");
+                        return true;
+                    }
                 }
             }
-            OMTLogging.Write("RemoveConnection", "OMTSend.RemoveChannel");
+            return false;
+
         }
 
         internal override void OnTallyChanged(OMTTally tally)
         {
-            SendMetadata(OMTMetadata.FromTally(tally));
+            SendMetadata(OMTMetadata.FromTally(tally),null);
         }
+        internal override void OnDisconnected(OMTChannel ch)
+        {
+            if (ch != null)
+            {
+                if (RemoveChannel(ch))
+                {
+                    if (discoveryServer != null)
+                    {
+                        discoveryServer.Disconnected(ch.RemoteEndPoint);
+                    }
+                    UpdateTally();
+                }
+            }
+        }
+
         internal int Send(OMTFrame frame)
         {
             int len = 0;
             OMTQuality suggested = OMTQuality.Default;
             OMTChannel[] channels = this.channels;
-            bool removed = false;
             if (channels != null)
             {
                 for (int i = 0; i < channels.Length; i++)
@@ -368,15 +416,6 @@ namespace libomtnet
                             }
                         }
                     }
-                    else
-                    {
-                        RemoveChannel(channels[i]);
-                        removed = true;
-                    }
-                }
-                if (removed)
-                {
-                    UpdateTally();
                 }
                 if (quality == OMTQuality.Default)
                 {
@@ -413,21 +452,30 @@ namespace libomtnet
         /// <param name="outFrame">The frame struct to fill with the received data</param>
         public bool Receive(int millisecondsTimeout, ref OMTMediaFrame outFrame)
         {
+            OMTMetadata metadata = null;
+            if (Receive(millisecondsTimeout, ref metadata))
+            {
+                return ReceiveMetadata(metadata, ref outFrame);
+            }
+            return false;
+        }
+        internal bool Receive(int millisecondsTimeout, ref OMTMetadata metadata)
+        {
             lock (metaLock)
             {
                 if (Exiting) return false;
-                if (ReceiveInternal(ref outFrame)) return true;
+                if (ReceiveInternal(ref metadata)) return true;
                 for (int i = 0; i < 2; i++)
                 {
                     if (metadataHandle.WaitOne(millisecondsTimeout) == false) return false;
                     if (Exiting) return false;
-                    if (ReceiveInternal(ref outFrame)) return true;
-                }              
+                    if (ReceiveInternal(ref metadata)) return true;
+                }
             }
             return false;
         }
 
-        private bool ReceiveInternal(ref OMTMediaFrame frame)
+        private bool ReceiveInternal(ref OMTMetadata frame)
         {
             OMTChannel[] channels = this.channels;
             for (int i = 0; i < channels.Length; i++)
@@ -437,13 +485,14 @@ namespace libomtnet
                 {
                     if (ch.ReadyMetadataCount > 0)
                     {
-                        OMTMetadata m = ch.ReceiveMetadata();
-                        return ReceiveMetadata(m, ref frame);
+                        frame = ch.ReceiveMetadata();
+                        return true;
                     }
                 }
             }
             return false;
         }
+
         internal override OMTTally GetTallyInternal()
         {
             OMTTally tally = new OMTTally();
@@ -490,12 +539,12 @@ namespace libomtnet
             OMTMetadata m = OMTMetadata.FromMediaFrame(metadata);
             if (m != null)
             {
-                return SendMetadata(m);
+                return SendMetadata(m, null);
             }
             return 0;
         }
 
-        private int SendMetadata(OMTMetadata metadata)
+        internal int SendMetadata(OMTMetadata metadata, IPEndPoint endpoint)
         {
             lock (metaLock)
             {
@@ -509,7 +558,10 @@ namespace libomtnet
                         OMTChannel ch = channels[i];
                         if (ch.IsMetadata())
                         {
-                            len += channels[i].Send(metadata);
+                            if (endpoint == null || ch.RemoteEndPoint == endpoint)
+                            {
+                                len += channels[i].Send(metadata);
+                            }
                         }
                     }
                 }

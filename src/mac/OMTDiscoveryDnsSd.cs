@@ -138,7 +138,7 @@ namespace libomtnet.mac
             }
         }
 
-        internal override bool DeregisterAddress(OMTAddress address)
+        internal override bool DeregisterAddressInternal(OMTAddress address)
         {
             lock (lockSync)
             {
@@ -164,7 +164,7 @@ namespace libomtnet.mac
             return data;
         }
 
-        internal override bool RegisterAddress(OMTAddress address)
+        internal override bool RegisterAddressInternal(OMTAddress address)
         {
             lock (lockSync)
             {

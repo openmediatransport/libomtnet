@@ -24,6 +24,7 @@
 */
 
 using System;
+using System.Net;
 using System.Xml;
 namespace libomtnet
 {
@@ -50,6 +51,7 @@ namespace libomtnet
         public const string SUGGESTED_QUALITY = @"<OMTSettings Quality=""Default"" />";
         public const string SENDER_INFO_NAME = @"OMTInfo";
         public const string SENDER_INFO_PREFIX = @"<OMTInfo";
+        public const string ADDRESS_NAME = @"OMTAddress";
     }
 
     internal class OMTMetadataUtils
@@ -73,10 +75,17 @@ namespace libomtnet
     {
         public long timestamp;
         public string XML;
+        public IPEndPoint Endpoint;
         public OMTMetadata(long timestamp, string xML)
         {
             Timestamp = timestamp;
             XML = xML;
+        }
+        public OMTMetadata(long timestamp, string xML, IPEndPoint endpoint)
+        {
+            Timestamp = timestamp;
+            XML = xML;
+            Endpoint = endpoint;
         }
 
         public override long Timestamp
