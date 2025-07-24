@@ -40,6 +40,7 @@ namespace libomtnet
         private Socket socket;
         private SocketAsyncEventArgs receiveargs;
         private OMTSocketAsyncPool sendpool;
+        private OMTSocketAsyncPool metapool;
         private OMTBuffer tempReceiveBuffer;
         private OMTFramePool framePool;
         private OMTFrame pendingFrame;
@@ -107,6 +108,7 @@ namespace libomtnet
                 startingSendPoolSize = OMTConstants.NETWORK_ASYNC_BUFFER_META_ONLY;
             }
             sendpool = new OMTSocketAsyncPool(sendPoolCount, startingSendPoolSize);
+            metapool = new OMTSocketAsyncPool(OMTConstants.NETWORK_ASYNC_COUNT_META_ONLY, OMTConstants.NETWORK_ASYNC_BUFFER_META_ONLY);
             framePool = new OMTFramePool(poolCount, startingFrameSize, true);
 
             readyFrames = new Queue<OMTFrame>();
@@ -189,19 +191,24 @@ namespace libomtnet
                         Debug.WriteLine("OMTChannel.Send.DroppedOversizedFrame");
                         return 0;
                     }
-                    SocketAsyncEventArgs e = sendpool.GetEventArgs();
+                    OMTSocketAsyncPool pool = sendpool;
+                    if (frame.FrameType == OMTFrameType.Metadata)
+                    {
+                        pool = metapool;
+                    }
+                    SocketAsyncEventArgs e = pool.GetEventArgs();
                     if (e == null)
                     {
                         statistics.FramesDropped += 1;
                         Debug.WriteLine("OMTChannel.Send.DroppedFrame");
                         return 0;
                     }
-                    sendpool.Resize(e, length);
+                    pool.Resize(e, length);
                     frame.WriteHeaderTo(e.Buffer, 0, e.Count);
                     int headerLength = frame.HeaderLength + frame.ExtendedHeaderLength;
                     frame.WriteDataTo(e.Buffer, 0, headerLength, length - headerLength);
                     e.SetBuffer(0, length);
-                    sendpool.SendAsync(socket, e);
+                    pool.SendAsync(socket, e);
                     written = length;
                     if (frame.FrameType != OMTFrameType.Metadata)
                     {
@@ -520,6 +527,11 @@ namespace libomtnet
             { 
                 sendpool.Dispose(); 
                 sendpool = null;
+            }
+            if (metapool != null)
+            {
+                metapool.Dispose();
+                metapool = null;
             }
             if (framePool != null)
             {
