@@ -128,6 +128,7 @@ namespace libomtnet
             lock (addresses)
             {
                 addresses.Remove(entry);
+                entry.Address.removed = true;
                 SendEntry(entry, null);
                 OMTLogging.Write("Removed " + entry.Address.ToString() + " From " + endpoint.ToString(), "OMTDiscoveryServer");
                 Console.WriteLine(endpoint.ToString() + " REMOVED " + entry.Address.ToString());
