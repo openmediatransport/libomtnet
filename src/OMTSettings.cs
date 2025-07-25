@@ -112,7 +112,7 @@ namespace libomtnet
                     if (node == null)
                     {
                         node = document.CreateElement(key);
-                        document.AppendChild(node);
+                        rootNode.AppendChild(node);
                     }
                     node.InnerText = value;
                 }
