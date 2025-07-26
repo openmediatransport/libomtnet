@@ -71,7 +71,9 @@ namespace libomtnet
 
         public virtual string GetStoragePath()
         {
-           return Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + Path.DirectorySeparatorChar + "OMT";
+            string sz = Environment.GetEnvironmentVariable("OMT_STORAGE_PATH");
+            if (!String.IsNullOrEmpty(sz)) return sz;
+            return Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + Path.DirectorySeparatorChar + "OMT";
         }
         public static OMTPlatformType GetPlatformType()
         {

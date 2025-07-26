@@ -64,7 +64,7 @@ namespace libomtnet
             }
             catch (Exception ex)
             {
-                Debug.WriteLine(ex.ToString());
+                Console.WriteLine(ex.ToString());
             }
             loggingThread = new Thread(ProcessLog);
             loggingThread.IsBackground = true;

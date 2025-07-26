@@ -40,7 +40,9 @@ namespace libomtnet.linux
 
         public override string GetStoragePath()
         {
-            return "~/.OMT";
+            string sz = Environment.GetEnvironmentVariable("OMT_STORAGE_PATH");
+            if (!String.IsNullOrEmpty(sz)) return sz;
+            return Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + Path.DirectorySeparatorChar + ".OMT";
         }
 
         public override IntPtr OpenLibrary(string filename)

@@ -45,11 +45,7 @@ namespace libomtnet
             {
                 if (instance == null)
                 {
-                    string sz = Environment.GetEnvironmentVariable("OMT_SETTINGS_PATH");
-                    if (String.IsNullOrEmpty(sz))
-                    {
-                        sz = OMTPlatform.GetInstance().GetStoragePath() + Path.DirectorySeparatorChar + "settings.xml";
-                    }
+                    string sz = OMTPlatform.GetInstance().GetStoragePath() + Path.DirectorySeparatorChar + "settings.xml";
                     instance = new OMTSettings(sz);
                 }
                 return instance;
