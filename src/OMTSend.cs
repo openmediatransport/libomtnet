@@ -579,7 +579,8 @@ namespace libomtnet
                     tempVideo.Data.Resize(frame.DataLength + frame.FrameMetadataLength);
 
                     if ((frame.Codec == (int)OMTCodec.UYVY) || (frame.Codec == (int)OMTCodec.BGRA) ||
-                        (frame.Codec == (int)OMTCodec.YUY2) || (frame.Codec == (int)OMTCodec.NV12) || (frame.Codec == (int)OMTCodec.YV12))
+                        (frame.Codec == (int)OMTCodec.YUY2) || (frame.Codec == (int)OMTCodec.NV12) || 
+                        (frame.Codec == (int)OMTCodec.YV12) || (frame.Codec == (int)OMTCodec.UYVA))
                     {
                         if (frame.Width >= 16 && frame.Height >= 16 && frame.Stride >= frame.Width)
                         {
@@ -615,6 +616,17 @@ namespace libomtnet
                                 {
                                     itype = VMXImageType.BGRX;
                                 } 
+                            }
+                            else if (frame.Codec == (int)OMTCodec.UYVA)
+                            {
+                                if (alpha)
+                                {
+                                    itype = VMXImageType.UYVA;
+                                }
+                                else
+                                {
+                                    itype = VMXImageType.UYVY;
+                                }
                             }
                             len = codec.Encode(itype, frame.Data, frame.Stride, buffer, interlaced);
                             EndCodecTimer();

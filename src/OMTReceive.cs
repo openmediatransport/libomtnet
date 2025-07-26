@@ -30,6 +30,7 @@ using System.Net.Sockets;
 using System.Threading;
 using libomtnet.codecs;
 using System.Runtime.InteropServices;
+using System.Diagnostics.SymbolStore;
 
 namespace libomtnet
 {
@@ -135,7 +136,7 @@ namespace libomtnet
             this.frameTypes = frameTypes;
             this.address = address;
             this.audioCodec = new OMTFPA1Codec(OMTConstants.AUDIO_MAX_SIZE);
-            if (flags.HasFlag(OMTReceiveFlags.IncludeCompressed))
+            if (flags.HasFlag(OMTReceiveFlags.IncludeCompressed) || flags.HasFlag(OMTReceiveFlags.CompressedOnly))
             {
                 tempCompressedVideo = Marshal.AllocHGlobal(OMTConstants.VIDEO_MAX_SIZE);
             }
@@ -598,73 +599,107 @@ namespace libomtnet
                 {
                     OMTVideoFlags flags = (OMTVideoFlags)header.Flags;
 
-                    int framesPerSecond = (int)OMTUtils.ToFrameRate(header.FrameRateN, header.FrameRateD);
-                    CreateCodec(header.Width, header.Height, framesPerSecond, (VMXColorSpace)header.ColorSpace);
-                    byte[] dst = tempVideo.Buffer;
-
                     bool result = false;
                     bool alpha = flags.HasFlag(OMTVideoFlags.Alpha);
                     bool preview = flags.HasFlag(OMTVideoFlags.Preview);
                     bool interlaced = flags.HasFlag(OMTVideoFlags.Interlaced);
                     int frameLength = frame.Data.Length - frame.MetadataLength;
+                    int framesPerSecond = (int)OMTUtils.ToFrameRate(header.FrameRateN, header.FrameRateD);
 
-                    BeginCodecTimer();
-                    if (preview)
+                    bool compressedOnly = this.flags.HasFlag(OMTReceiveFlags.CompressedOnly);
+                    if (compressedOnly == false)
                     {
-                        OMTSize sz = codec.GetPreviewSize(interlaced);
-                        header.Width = sz.Width;
-                        header.Height = sz.Height;
+                        CreateCodec(header.Width, header.Height, framesPerSecond, (VMXColorSpace)header.ColorSpace);
+                        byte[] dst = tempVideo.Buffer;
+                        BeginCodecTimer();
+                        if (preview)
+                        {
+                            OMTSize sz = codec.GetPreviewSize(interlaced);
+                            header.Width = sz.Width;
+                            header.Height = sz.Height;
 
-                        if (preferredVideoFormat == OMTPreferredVideoFormat.UYVY | (preferredVideoFormat == OMTPreferredVideoFormat.UYVYorBGRA & (alpha == false)))
-                        {
-                            tempVideoStride = header.Width * 2;
-                            result = codec.DecodePreview(VMXImageType.UYVY, frame.Data.Buffer, frameLength, ref dst, tempVideoStride);
-                            videoFrame.Codec = (int)OMTCodec.UYVY;
-                        }
-                        else if (preferredVideoFormat == OMTPreferredVideoFormat.BGRA | (preferredVideoFormat == OMTPreferredVideoFormat.UYVYorBGRA & alpha))
-                        {
-                            tempVideoStride = header.Width * 4;
-                            if (alpha)
+                            if (preferredVideoFormat == OMTPreferredVideoFormat.UYVY | (preferredVideoFormat == OMTPreferredVideoFormat.UYVYorBGRA & (alpha == false)) | (preferredVideoFormat == OMTPreferredVideoFormat.UYVYorUYVA & (alpha == false)))
                             {
-                                result = codec.DecodePreview(VMXImageType.BGRA, frame.Data.Buffer, frameLength, ref dst, tempVideoStride);                                
-                            } else
-                            {
-                                result = codec.DecodePreview(VMXImageType.BGRX, frame.Data.Buffer, frameLength, ref dst, tempVideoStride);
+                                tempVideoStride = header.Width * 2;
+                                result = codec.DecodePreview(VMXImageType.UYVY, frame.Data.Buffer, frameLength, ref dst, tempVideoStride);
+                                videoFrame.Codec = (int)OMTCodec.UYVY;
                             }
-                            videoFrame.Codec = (int)OMTCodec.BGRA;
+                            else if (preferredVideoFormat == OMTPreferredVideoFormat.BGRA | (preferredVideoFormat == OMTPreferredVideoFormat.UYVYorBGRA & alpha))
+                            {
+                                tempVideoStride = header.Width * 4;
+                                if (alpha)
+                                {
+                                    result = codec.DecodePreview(VMXImageType.BGRA, frame.Data.Buffer, frameLength, ref dst, tempVideoStride);
+                                }
+                                else
+                                {
+                                    result = codec.DecodePreview(VMXImageType.BGRX, frame.Data.Buffer, frameLength, ref dst, tempVideoStride);
+                                }
+                                videoFrame.Codec = (int)OMTCodec.BGRA;
+                            }
+                            else if (preferredVideoFormat == OMTPreferredVideoFormat.UYVYorUYVA & alpha)
+                            {
+                                tempVideoStride = header.Width * 2;
+                                result = codec.DecodePreview(VMXImageType.UYVA, frame.Data.Buffer, frameLength, ref dst, tempVideoStride);
+                                videoFrame.Codec = (int)OMTCodec.UYVA;
+                            }
                         }
-                    }
-                    else
+                        else
+                        {
+                            if (preferredVideoFormat == OMTPreferredVideoFormat.UYVY | (preferredVideoFormat == OMTPreferredVideoFormat.UYVYorBGRA & (alpha == false)))
+                            {
+                                tempVideoStride = header.Width * 2;
+                                result = codec.Decode(VMXImageType.UYVY, frame.Data.Buffer, frameLength, ref dst, tempVideoStride);
+                                videoFrame.Codec = (int)OMTCodec.UYVY;
+                            }
+                            else if (preferredVideoFormat == OMTPreferredVideoFormat.BGRA | (preferredVideoFormat == OMTPreferredVideoFormat.UYVYorBGRA & alpha))
+                            {
+                                tempVideoStride = header.Width * 4;
+                                if (alpha)
+                                {
+                                    result = codec.Decode(VMXImageType.BGRA, frame.Data.Buffer, frameLength, ref dst, tempVideoStride);
+                                }
+                                else
+                                {
+                                    result = codec.Decode(VMXImageType.BGRX, frame.Data.Buffer, frameLength, ref dst, tempVideoStride);
+                                }
+                                videoFrame.Codec = (int)OMTCodec.BGRA;
+                            }
+                            else if (preferredVideoFormat == OMTPreferredVideoFormat.UYVYorUYVA & alpha)
+                            {
+                                tempVideoStride = header.Width * 2;
+                                result = codec.Decode(VMXImageType.UYVA, frame.Data.Buffer, frameLength, ref dst, tempVideoStride);
+                                videoFrame.Codec = (int)OMTCodec.UYVA;
+                            }
+                        }
+                        EndCodecTimer();
+                    } else
                     {
-                        if (preferredVideoFormat == OMTPreferredVideoFormat.UYVY | (preferredVideoFormat == OMTPreferredVideoFormat.UYVYorBGRA & (alpha == false)))
-                        {
-                            tempVideoStride = header.Width * 2;
-                            result = codec.Decode(VMXImageType.UYVY, frame.Data.Buffer, frameLength, ref dst, tempVideoStride);
-                            videoFrame.Codec = (int)OMTCodec.UYVY;
-                        }
-                        else if (preferredVideoFormat == OMTPreferredVideoFormat.BGRA | (preferredVideoFormat == OMTPreferredVideoFormat.UYVYorBGRA & alpha))
-                        {
-                            tempVideoStride = header.Width * 4;
-                            if (alpha)
-                            {
-                                result = codec.Decode(VMXImageType.BGRA, frame.Data.Buffer, frameLength, ref dst, tempVideoStride);
-                            } else
-                            {
-                                result = codec.Decode(VMXImageType.BGRX, frame.Data.Buffer, frameLength, ref dst, tempVideoStride);
-                            }                            
-                            videoFrame.Codec = (int)OMTCodec.BGRA;
-                        }
-                    }
-                    EndCodecTimer();
-
+                        result = true;
+                        tempVideoStride = 0;
+                        videoFrame.Codec = (int)OMTCodec.VMX1;
+                    } 
                     if (result)
                     {
                         videoFrame.Type = OMTFrameType.Video;
                         videoFrame.Timestamp = frame.Timestamp;
                         videoFrame.Width = header.Width;
                         videoFrame.Height = header.Height;
-                        videoFrame.Data = tempVideo.Pointer;
-                        videoFrame.DataLength = tempVideoStride * header.Height;
+
+                        if (compressedOnly)
+                        {
+                            videoFrame.Data = IntPtr.Zero;
+                            videoFrame.DataLength = 0;
+                        } else
+                        {
+                            videoFrame.Data = tempVideo.Pointer;
+                            videoFrame.DataLength = tempVideoStride * header.Height;
+                            if (videoFrame.Codec == (int)OMTCodec.UYVA)
+                            {
+                                videoFrame.DataLength += header.Width * header.Height;
+                            }
+                        }
+
                         videoFrame.Stride = tempVideoStride;
 
                         if (tempCompressedVideo != IntPtr.Zero)

@@ -45,10 +45,12 @@ namespace libomtnet.codecs
         int VMX_EncodeBGRA(IntPtr Instance, IntPtr src, int stride, int interlaced);
         int VMX_EncodeBGRX(IntPtr Instance, IntPtr src, int stride, int interlaced);
         int VMX_EncodeUYVY(IntPtr Instance, IntPtr src, int stride, int interlaced);
+        int VMX_EncodeUYVA(IntPtr Instance, IntPtr src, int stride, int interlaced);
         int VMX_EncodeYUY2(IntPtr Instance, IntPtr src, int stride, int interlaced);
         int VMX_EncodeNV12(IntPtr Instance, IntPtr srcY, int strideY, IntPtr srcUV, int strideUV, int interlaced);
         int VMX_EncodeYV12(IntPtr Instance, IntPtr srcY, int strideY, IntPtr srcU, int strideU, IntPtr srcV, int strideV, int interlaced);
         int VMX_DecodeUYVY(IntPtr Instance, byte[] dst, int stride);
+        int VMX_DecodeUYVA(IntPtr Instance, byte[] dst, int stride);
         int VMX_DecodeYUY2(IntPtr Instance, byte[] dst, int stride);
         int VMX_DecodeBGRX(IntPtr Instance, byte[] dst, int stride);
         int VMX_DecodeBGRA(IntPtr Instance, byte[] dst, int stride);
@@ -56,6 +58,7 @@ namespace libomtnet.codecs
         int VMX_DecodePreviewYUY2(IntPtr Instance, byte[] dst, int stride);
         int VMX_DecodePreviewBGRA(IntPtr Instance, byte[] dst, int stride);
         int VMX_DecodePreviewBGRX(IntPtr Instance, byte[] dst, int stride);
+        int VMX_DecodePreviewUYVA(IntPtr Instance, byte[] dst, int stride);
         int VMX_GetEncodedPreviewLength(IntPtr Instance);
         float VMX_CalculatePSNR(byte[] image1, byte[] image2, int stride, int bytesPerPixel, OMTSize sz);
     }

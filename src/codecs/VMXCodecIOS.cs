@@ -66,6 +66,11 @@ namespace libomtnet.codecs
             return VMXUnmanagedIOS.VMX_DecodePreviewUYVY(Instance, dst, stride);
         }
 
+        public int VMX_DecodePreviewUYVA(IntPtr Instance, byte[] dst, int stride)
+        {
+            return VMXUnmanagedIOS.VMX_DecodePreviewUYVA(Instance, dst, stride);
+        }
+
         public int VMX_DecodePreviewYUY2(IntPtr Instance, byte[] dst, int stride)
         {
             return VMXUnmanagedIOS.VMX_DecodePreviewYUY2(Instance, dst, stride);
@@ -74,6 +79,11 @@ namespace libomtnet.codecs
         public int VMX_DecodeUYVY(IntPtr Instance, byte[] dst, int stride)
         {
             return VMXUnmanagedIOS.VMX_DecodeUYVY(Instance, dst, stride);
+        }
+
+        public int VMX_DecodeUYVA(IntPtr Instance, byte[] dst, int stride)
+        {
+            return VMXUnmanagedIOS.VMX_DecodeUYVA(Instance, dst, stride);
         }
 
         public int VMX_DecodeYUY2(IntPtr Instance, byte[] dst, int stride)
@@ -104,6 +114,10 @@ namespace libomtnet.codecs
         public int VMX_EncodeUYVY(IntPtr Instance, IntPtr src, int stride, int interlaced)
         {
             return VMXUnmanagedIOS.VMX_EncodeUYVY(Instance, src, stride, interlaced);
+        }
+        public int VMX_EncodeUYVA(IntPtr Instance, IntPtr src, int stride, int interlaced)
+        {
+            return VMXUnmanagedIOS.VMX_EncodeUYVA(Instance, src, stride, interlaced);
         }
 
         public int VMX_EncodeYUY2(IntPtr Instance, IntPtr src, int stride, int interlaced)

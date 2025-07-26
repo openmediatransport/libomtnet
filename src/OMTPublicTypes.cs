@@ -83,7 +83,8 @@ namespace libomtnet
         YUY2 = 0x32595559,
         BGRA = 0x41524742,
         NV12 = 0x3231564E,
-        YV12 = 0x32315659
+        YV12 = 0x32315659,
+        UYVA = 0x41565955,
     }
 
     public enum OMTPlatformType
@@ -110,12 +111,16 @@ namespace libomtnet
     /// UYVYorBGRA will provide BGRA only when alpha channel is present.
     /// 
     /// BGRA will always convert back to BGRA
+    /// 
+    /// UYVYorUYVA will provide UYVA only when alpha channel is present.
+    /// 
     /// </summary>
     public enum OMTPreferredVideoFormat
     {
         UYVY = 0,
         UYVYorBGRA = 1,
-        BGRA = 2
+        BGRA = 2,
+        UYVYorUYVA = 3,
     }
 
     /// <summary>
@@ -125,13 +130,16 @@ namespace libomtnet
     /// 
     /// IncludeCompressed: Include a copy of the compressed VMX video frames for further processing or recording.
     /// 
+    /// CompressedOnly: Include only the compressed VMX video frame without decoding. In this instance DataLength will always be 0.
+    /// 
     /// </summary>
     [Flags]
     public enum OMTReceiveFlags
     {
         None = 0,
         Preview = 1,
-        IncludeCompressed = 2
+        IncludeCompressed = 2,
+        CompressedOnly = 4
     }
 
     /// <summary>
@@ -320,7 +328,7 @@ namespace libomtnet
         /// <summary>
         /// Receive only. Use standard Data/DataLength if sending VMX1 frames with a Sender
         /// 
-        /// If IncludeCompressed OMTReceiveFlags is set, this will include the original compressed video frame in VMX1 format.
+        /// If IncludeCompressed or CompressedOnly OMTReceiveFlags is set, this will include the original compressed video frame in VMX1 format.
         /// 
         /// This could then be muxed into an AVI or MOV file using FFmpeg or similar APIs
         /// 
