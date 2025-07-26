@@ -72,6 +72,8 @@ namespace libomtnet
         private OMTDiscovery discovery = null;
         private OMTDiscoveryClient discoveryClient = null;
 
+        private DateTime lastBeginConnect = DateTime.MinValue;
+
         private class ConnectionState
         {
             public OMTFrameType frameType;
@@ -277,6 +279,8 @@ namespace libomtnet
 
         private void BeginConnect()
         {
+            if (lastBeginConnect > DateTime.Now.AddSeconds(-1)) return;
+            lastBeginConnect = DateTime.Now;
             if (discovery != null)
             {
                 OMTAddress address = discovery.FindByFullNameOrUrl(this.address);
@@ -392,7 +396,7 @@ namespace libomtnet
                 }
                 catch (Exception ex)
                 {
-                    OMTLogging.Write(ex.ToString(), "OMTReceive.Connect");
+                    OMTLogging.Write(ex.Message, "OMTReceive.Connect");
                 }
                 if (cs.frameType == OMTFrameType.Video || cs.frameType == OMTFrameType.Metadata)
                 {
@@ -408,7 +412,7 @@ namespace libomtnet
         public bool IsConnected()
         {
             OMTChannel ch = videoChannel;
-            if (frameTypes.HasFlag(OMTFrameType.Video))
+            if (frameTypes.HasFlag(OMTFrameType.Video) || frameTypes == OMTFrameType.Metadata)
             {
                 if (!IsConnected(ch))
                 {
@@ -423,13 +427,7 @@ namespace libomtnet
                     return false;
                 }
             }
-            if (frameTypes == OMTFrameType.Metadata)
-            {
-                if (!IsConnected(videoChannel))
-                {
-                    return false;
-                }
-            } else if (frameTypes == OMTFrameType.None)
+            if (frameTypes == OMTFrameType.None)
             {
                 return true;
             }
@@ -447,7 +445,16 @@ namespace libomtnet
             }
             return true;
         }
-
+        internal override void OnDisconnected(OMTChannel ch)
+        {
+            if (ch != null)
+            {
+                if (discoveryClient != null)
+                {
+                    discoveryClient.Disconnected();
+                }
+            }
+        }
         private OMTFrameBase ReceiveInternal(OMTFrameType frameTypes)
         {
             if (frameTypes.HasFlag(OMTFrameType.Video))

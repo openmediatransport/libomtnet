@@ -108,11 +108,25 @@ namespace libomtnet
         {
             try
             {
+                OMTLogging.Write("Connected to server", "OMTDiscoveryClient");
                 SendAll();
             }
             catch (Exception ex)
             {
-                OMTLogging.Write(ex.ToString(), "OMTDiscoveryServer");
+                OMTLogging.Write(ex.ToString(), "OMTDiscoveryClient");
+            }
+        }
+
+        internal void Disconnected()
+        {
+            try
+            {
+                OMTLogging.Write("Disconnected from server", "OMTDiscoveryClient");
+                discovery.RemoveServerAddresses();
+            }
+            catch (Exception ex)
+            {
+                OMTLogging.Write(ex.ToString(), "OMTDiscoveryClient");
             }
         }
 
@@ -123,7 +137,7 @@ namespace libomtnet
                 OMTMetadata frame = null;
                 while (threadExit == false)
                 {
-                    if (client.Receive(100, ref frame))
+                    if (client.Receive(400, ref frame))
                     {
                         if (frame != null)
                         {
@@ -134,13 +148,17 @@ namespace libomtnet
                                 {
                                     if (a.removed)
                                     {
-                                        OMTLogging.Write("RemovedFromServer: " + a.ToString(), "OMTDiscoveryClient");
                                         discovery.RemoveEntry(a, true);
+                                        OMTLogging.Write("RemovedFromServer: " + a.ToString(), "OMTDiscoveryClient");
                                     }
                                     else
                                     {
                                         OMTLogging.Write("NewFromServer: " + a.ToString(), "OMTDiscoveryClient");
-                                        discovery.UpdateDiscoveredEntry(a.ToString(), a.Port, a.Addresses);
+                                        OMTDiscoveryEntry e = discovery.UpdateDiscoveredEntry(a.ToString(), a.Port, a.Addresses);
+                                        if (e != null)
+                                        {
+                                            e.FromServer = true;
+                                        }
                                     }
                                 } else
                                 {

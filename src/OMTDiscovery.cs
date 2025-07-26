@@ -399,12 +399,32 @@ namespace libomtnet
             return null;
         }
 
+        internal void RemoveServerAddresses()
+        {
+            lock (lockSync)
+            {
+                for (int i = entries.Count - 1; i >= 0; i--)
+                {
+                    OMTDiscoveryEntry entry = entries[i];
+                    if (entry.FromServer)
+                    {
+                        if (entry.Status == OMTDiscoveryEntryStatus.Discovered)
+                        {
+                            entries.RemoveAt(i);
+                            OMTLogging.Write("RemovedAddressFromServer: " + entry.Address.ToString(), "OMTDiscovery");
+                        }
+                    }
+                }
+                RefreshAddresses();
+            }
+
+        }
+
         internal void RemoveExpiredAddresses()
         {
             lock (lockSync)
             {
                 lastCleared = DateTime.Now;
-
                 for (int i = entries.Count - 1; i >= 0; i--)
                 {
                     OMTDiscoveryEntry entry = entries[i];
@@ -413,10 +433,11 @@ namespace libomtnet
                         if (entry.Expiry > DateTime.MinValue && entry.Expiry < DateTime.Now)
                         {
                             entries.RemoveAt(i);
-                            OMTLogging.Write("ExpiredAddress: " + entry.Address.ToString(), "OMTDiscoveryWin32");
+                            OMTLogging.Write("ExpiredAddress: " + entry.Address.ToString(), "OMTDiscovery");
                         }
                     }
                 }
+                RefreshAddresses();
             }
         }
 
@@ -549,6 +570,7 @@ namespace libomtnet
         private OMTDiscoveryEntryStatus status;
         private GCHandle handle;
         private DateTime expiry;
+        private bool fromServer;
 
         public OMTAddress Address { get { return address; } }
         public OMTDiscoveryEntryStatus Status { get { return status; } }
@@ -563,6 +585,12 @@ namespace libomtnet
         {
             get { return expiry; }
             set { expiry = value; }
+        }
+
+        public bool FromServer
+        {
+            get { return fromServer; }
+            set { fromServer = value; }
         }
 
         public void ChangeStatus(OMTDiscoveryEntryStatus status)
