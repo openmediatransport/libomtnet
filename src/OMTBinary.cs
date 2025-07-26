@@ -51,6 +51,13 @@ namespace libomtnet
             return result;
         }
 
+        public UInt16 ReadUInt16()
+        {
+            UInt16 result = (ushort)((int)this.buffer[offset] | ((int)this.buffer[offset + 1] << 8));
+            offset += 2;
+            return result;
+        }
+
         public Int64 ReadInt64()
         {
             uint num = (uint)((int)this.buffer[offset] | ((int)this.buffer[offset+1] << 8) | ((int)this.buffer[offset + 2] << 16) | ((int)this.buffer[offset + 3] << 24));
@@ -80,6 +87,12 @@ namespace libomtnet
             offset++;
         }
         public void Write(short value)
+        {
+            this.buffer[offset] = (byte)value;
+            this.buffer[offset + 1] = (byte)(value >> 8);
+            offset += 2;
+        }
+        public void Write(ushort value)
         {
             this.buffer[offset] = (byte)value;
             this.buffer[offset + 1] = (byte)(value >> 8);

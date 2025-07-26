@@ -39,7 +39,7 @@ namespace libomtnet.mac
         static extern IntPtr dlopen(string filename, int flags);
         public override string GetStoragePath()
         {
-            return base.GetStoragePath();
+            return "~/.OMT";
         }
         public override IntPtr OpenLibrary(string filename)
         {

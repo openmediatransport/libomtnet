@@ -78,6 +78,13 @@ namespace libomtnet
             this.length += count;
         }
 
+        public void Append(IntPtr buffer, int offset, int count)
+        {
+            Marshal.Copy(buffer + offset, this.buffer, this.offset, count);
+            this.offset += count;
+            this.length += count;
+        }
+
         /// <summary>
         /// Set the buffer where length is the entire length of valid data, not just from offset
         /// </summary>

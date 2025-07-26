@@ -40,11 +40,16 @@ namespace libomtnet
     }
 
     /// <summary>
-    /// Flags set on video frames
+    /// Flags set on video frames:
+    /// 
     /// Interlaced: Frames are interlaced
+    /// 
     /// Alpha: Frames contain an alpha channel
+    /// 
     /// PreMultiplied: When combined with Alpha, alpha channel is premultiplied, otherwise straight
+    /// 
     /// Preview: Frame is a special 1/8th preview frame
+    /// 
     /// </summary>
     [Flags]
     public enum OMTVideoFlags
@@ -58,11 +63,17 @@ namespace libomtnet
 
     /// <summary>
     /// Supported Codecs:
+    /// 
     /// VMX1 = Fast video codec
+    /// 
     /// UYVY = 16bpp YUV format
+    /// 
     /// YUY2 = 16bpp YUV format YUYV pixel order
+    /// 
     /// BGRA = 32bpp RGBA format (Same as ARGB32 on Win32)
+    /// 
     /// FPA1 = Floating-point Planar Audio 32bit
+    /// 
     /// </summary>
     public enum OMTCodec
     {
@@ -92,9 +103,12 @@ namespace libomtnet
     }
 
     /// <summary>
-    /// Specify the preferred uncompressed video format of decoded frames
+    /// Specify the preferred uncompressed video format of decoded frames.
+    /// 
     /// UYVY is always the fastest, if no alpha channel is required.
+    /// 
     /// UYVYorBGRA will provide BGRA only when alpha channel is present.
+    /// 
     /// BGRA will always convert back to BGRA
     /// </summary>
     public enum OMTPreferredVideoFormat
@@ -105,9 +119,12 @@ namespace libomtnet
     }
 
     /// <summary>
-    /// Flags to enable certain features on a Receiver
+    /// Flags to enable certain features on a Receiver:
+    /// 
     /// Preview: Receive only a 1/8th preview of the video.
+    /// 
     /// IncludeCompressed: Include a copy of the compressed VMX video frames for further processing or recording.
+    /// 
     /// </summary>
     [Flags]
     public enum OMTReceiveFlags
@@ -119,9 +136,13 @@ namespace libomtnet
 
     /// <summary>
     /// Specify the video encoding quality.
+    /// 
     /// If set to Default, the Sender is configured to allow suggestions from all Receivers.
+    /// 
     /// The highest suggestion amongst all receivers is then selected.
+    /// 
     /// If a Receiver is set to Default, then it will defer the quality to whatever is set amongst other Receivers.
+    /// 
     /// </summary>
     public enum OMTQuality
     {
@@ -221,18 +242,29 @@ namespace libomtnet
 
         /// <summary>
         /// This is a timestamp where 1 second = 10,000,000
+        /// 
+        /// This should represent the accurate time the frame or audio sample was generated at the source and be used on the receiving end to synchronize
+        /// and record to file as a presentation timestamp (pts).
+        /// 
         /// A special value of -1 can be specified to tell the Sender to generate timestamps and throttle as required to maintain
-        /// the specified FrameRate or SampleRate of the frame.
+        /// the specified FrameRate or SampleRate of the frame. 
+        /// 
         /// </summary>
         public long Timestamp;
 
         /// <summary>
         /// Sending:
+        /// 
         ///     Video: 'UYVY', 'YUY2', 'NV12', 'YV12, 'BGRA', 'VMX1' are supported (BGRA will be treated as BGRX where alpha flags are not set)
+        ///     
         ///     Audio: Only 'FPA1' is supported (32bit floating point planar audio)
+        ///     
         /// Receiving:
+        /// 
         ///     Video: Only 'UYVY', 'BGRA' and 'BGRX' are supported
+        ///     
         ///     Audio: Only 'FPA1' is supported (32bit floating point planar audio)
+        ///     
         /// </summary>
         public int Codec;
 
@@ -267,25 +299,44 @@ namespace libomtnet
         
         /// <summary>
         /// Video: Uncompressed pixel data
+        /// 
         /// Audio: Planar 32bit floating point audio
+        /// 
         /// Metadata: UTF-8 encoded XML string with terminating null character
+        /// 
         /// </summary>
         public IntPtr Data;
 
         /// <summary>
         /// Video: Number of bytes total including stride
+        /// 
         /// Audio: Number of bytes (SamplesPerChannel * Channels * 4)
+        /// 
         /// Metadata: Number of bytes in UTF-8 encoded string + 1 for terminating null character. 
+        /// 
         /// </summary>
         public int DataLength;
 
         /// <summary>
         /// Receive only. Use standard Data/DataLength if sending VMX1 frames with a Sender
+        /// 
         /// If IncludeCompressed OMTReceiveFlags is set, this will include the original compressed video frame in VMX1 format.
+        /// 
         /// This could then be muxed into an AVI or MOV file using FFmpeg or similar APIs
+        /// 
         /// </summary>
         public IntPtr CompressedData;
         public int CompressedLength;
+
+        /// <summary>
+        /// Per frame metadata as UTF-8 encoded string + 1 for null character. Up to 65536 bytes supported.
+        /// </summary>
+        public IntPtr FrameMetadata;
+
+        /// <summary>
+        /// Length in bytes of per frame metadata including null character
+        /// </summary>
+        public int FrameMetadataLength;
 
         public static IntPtr ToIntPtr(OMTMediaFrame frame)
         {

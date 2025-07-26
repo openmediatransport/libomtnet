@@ -59,6 +59,8 @@ namespace libomtnet
         public static int AUDIO_SAMPLE_SIZE = 4;
         public static int METADATA_MAX_COUNT = 60;
 
+        public static int METADATA_FRAME_SIZE = 65536;
+
         public static string URL_PREFIX = "omt://";
     }
 }

@@ -25,6 +25,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -37,6 +38,11 @@ namespace libomtnet.linux
         [DllImport("libdl.so")]
         static extern IntPtr dlopen(string filename, int flags);
 
+        public override string GetStoragePath()
+        {
+            return "~/.OMT";
+        }
+
         public override IntPtr OpenLibrary(string filename)
         {
             return dlopen(filename, RTLD_GLOBAL | RTLD_NOW);
@@ -45,5 +51,7 @@ namespace libomtnet.linux
         {
             return ".so";
         }
+
+        
     }
 }

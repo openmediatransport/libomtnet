@@ -74,9 +74,10 @@ namespace libomtnet
         public byte Version; //=1
         public byte FrameType;
         public long Timestamp;
-        public byte Reserved1;
-        public byte Reserved2;
-        public int DataLength; //Including extended header
+        //public byte Reserved1;
+        //public byte Reserved2;
+        public ushort MetadataLength; //Length in bytes of UTF-8 metadata including null character
+        public int DataLength; //Including extended header and metadata
     }
     internal struct OMTVideoHeader
     {
@@ -148,6 +149,11 @@ namespace libomtnet
         {
             get { return (int)OMTFrameLength.Header; }
         }
+
+        public int MetadataLength
+        {
+            get { return (int)header.MetadataLength; }
+        }
         public int ExtendedHeaderLength
         {
             get
@@ -183,8 +189,7 @@ namespace libomtnet
             b.Write(header.Version);
             b.Write(header.FrameType);
             b.Write(header.Timestamp);
-            b.Write(header.Reserved1);
-            b.Write(header.Reserved2);
+            b.Write(header.MetadataLength);
             if (preview)
             {
                 b.Write(previewLength);
@@ -242,8 +247,7 @@ namespace libomtnet
             {
                 header.FrameType = b.ReadByte();
                 header.Timestamp = b.ReadInt64();
-                header.Reserved1 = b.ReadByte();
-                header.Reserved2 = b.ReadByte();
+                header.MetadataLength = b.ReadUInt16();
                 header.DataLength = b.ReadInt32();
                 return true;
             }
@@ -290,14 +294,28 @@ namespace libomtnet
         {
             header.DataLength = this.buffer.Length + ExtendedHeaderLength;
         }
+
+        /// <summary>
+        /// Includes MetadataLength
+        /// </summary>
+        /// <param name="length"></param>
         public void SetPreviewDataLength(int length)
         {
             previewLength = ExtendedHeaderLength + length;
         }
+
+        /// <summary>
+        /// Includes MetadataLength
+        /// </summary>
+        /// <param name="length"></param>
         public void SetDataLength(int length)
         {
             this.buffer.SetBuffer(0, length);
             UpdateDataLength();
+        }
+        public void SetMetadataLength(int length)
+        {
+            header.MetadataLength = (ushort)length;
         }
 
         public void SetPreviewMode(bool preview)

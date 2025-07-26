@@ -47,9 +47,20 @@ namespace libomtnet
         }
 
         public static IntPtr StringToPtrUTF8(string s)
+        {         
+            byte[] b = UTF8Encoding.UTF8.GetBytes(s);
+            IntPtr dst = Marshal.AllocHGlobal(b.Length + 1);
+            Marshal.Copy(b, 0, dst, b.Length);
+            Marshal.WriteByte(dst, b.Length, 0);
+            return dst;
+        }
+        public static IntPtr StringToPtrUTF8(string s, out int length)
         {
-            IntPtr dst = Marshal.AllocHGlobal(s.Length + 1);
-            WriteStringToPtrUTF8(s, dst);
+            byte[] b = UTF8Encoding.UTF8.GetBytes(s);
+            IntPtr dst = Marshal.AllocHGlobal(b.Length + 1);
+            Marshal.Copy(b, 0, dst, b.Length);
+            Marshal.WriteByte(dst, b.Length, 0);
+            length = b.Length + 1;
             return dst;
         }
 

@@ -576,7 +576,7 @@ namespace libomtnet
                 if (Exiting) return 0;
                 if (frame.Data != IntPtr.Zero && frame.DataLength > 0)
                 {
-                    tempVideo.Data.Resize(frame.DataLength);
+                    tempVideo.Data.Resize(frame.DataLength + frame.FrameMetadataLength);
 
                     if ((frame.Codec == (int)OMTCodec.UYVY) || (frame.Codec == (int)OMTCodec.BGRA) ||
                         (frame.Codec == (int)OMTCodec.YUY2) || (frame.Codec == (int)OMTCodec.NV12) || (frame.Codec == (int)OMTCodec.YV12))
@@ -620,8 +620,14 @@ namespace libomtnet
                             EndCodecTimer();
                             if (len > 0)
                             {
-                                tempVideo.SetDataLength(len);
-                                tempVideo.SetPreviewDataLength(codec.GetEncodedPreviewLength());
+                                if (frame.FrameMetadataLength > 0)
+                                {
+                                    tempVideo.Data.SetBuffer(len, len);
+                                    tempVideo.Data.Append(frame.FrameMetadata,0,frame.FrameMetadataLength);
+                                }
+                                tempVideo.SetDataLength(len + frame.FrameMetadataLength);
+                                tempVideo.SetMetadataLength(frame.FrameMetadataLength);
+                                tempVideo.SetPreviewDataLength(codec.GetEncodedPreviewLength() + frame.FrameMetadataLength);
                                 tempVideo.ConfigureVideo((int)OMTCodec.VMX1, frame.Width, frame.Height, frame.FrameRateN, frame.FrameRateD, frame.AspectRatio, frame.Flags, frame.ColorSpace);
                                 videoClock.Process(ref frame);
                                 tempVideo.Timestamp = frame.Timestamp;
@@ -641,9 +647,14 @@ namespace libomtnet
                     {
                         if (frame.DataLength > 0)
                         {
-                            tempVideo.SetDataLength(frame.DataLength);
-                            tempVideo.SetPreviewDataLength(frame.DataLength);
+                            tempVideo.SetDataLength(frame.DataLength + frame.FrameMetadataLength);
+                            tempVideo.SetMetadataLength(frame.FrameMetadataLength);
+                            tempVideo.SetPreviewDataLength(frame.DataLength + frame.FrameMetadataLength);                            
                             Marshal.Copy(frame.Data, tempVideo.Data.Buffer, 0, frame.DataLength);
+                            if (frame.FrameMetadataLength > 0)
+                            {
+                                Marshal.Copy(frame.FrameMetadata, tempVideo.Data.Buffer,frame.DataLength, frame.FrameMetadataLength);
+                            }
                             tempVideo.ConfigureVideo((int)OMTCodec.VMX1, frame.Width, frame.Height, frame.FrameRateN, frame.FrameRateD, frame.AspectRatio, frame.Flags, frame.ColorSpace);
                             videoClock.Process(ref frame);
                             tempVideo.Timestamp = frame.Timestamp;
@@ -674,12 +685,17 @@ namespace libomtnet
                         return 0;
                     }
                     tempAudioBuffer.Resize(frame.DataLength);
-                    tempAudio.Data.Resize(frame.DataLength);
+                    tempAudio.Data.Resize(frame.DataLength + frame.FrameMetadataLength);
                     Marshal.Copy(frame.Data, tempAudioBuffer.Buffer, 0, frame.DataLength);
                     tempAudioBuffer.SetBuffer(0, frame.DataLength);
                     tempAudio.Data.SetBuffer(0, 0);
                     OMTActiveAudioChannels ch = OMTFPA1Codec.Encode(tempAudioBuffer, frame.Channels, frame.SamplesPerChannel, tempAudio.Data);
+                    if (frame.FrameMetadataLength > 0 && frame.FrameMetadata != IntPtr.Zero)
+                    {
+                        tempAudio.Data.Append(frame.FrameMetadata,0, frame.FrameMetadataLength);
+                    }
                     tempAudio.SetDataLength(tempAudio.Data.Length);
+                    tempAudio.SetMetadataLength(frame.FrameMetadataLength);
                     tempAudio.ConfigureAudio(frame.SampleRate, frame.Channels, frame.SamplesPerChannel, ch);
                     audioClock.Process(ref frame);
                     tempAudio.Timestamp = frame.Timestamp;
