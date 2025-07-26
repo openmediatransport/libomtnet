@@ -38,12 +38,49 @@ namespace libomtnet.mac
 
         [DllImport("libdl.dylib")]
         static extern IntPtr dlopen(string filename, int flags);
+
+        [DllImport("libc", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        private static extern uint getuid();
+
+        [DllImport("libc", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        private static extern IntPtr getpwuid(uint uid);
+
         public override string GetStoragePath()
         {
             string sz = Environment.GetEnvironmentVariable("OMT_STORAGE_PATH");
             if (!String.IsNullOrEmpty(sz)) return sz;
-            return Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + Path.DirectorySeparatorChar + ".OMT";
+            sz = GetRealUserHome();
+            if (!String.IsNullOrEmpty(sz)) {
+                return Path.Combine(sz, ".OMT"); 
+            }
+            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),".OMT");
         }
+
+        /// <summary>
+        /// Attempts to get the real user home directory by manually reading pointer offset into passwd struct.
+        /// </summary>
+        /// <returns>Real user home directory path or null if unavailable.</returns>
+        private static string GetRealUserHome()
+        {
+            try
+            {
+                uint uid = getuid();
+                IntPtr pwdPtr = getpwuid(uid);
+                if (pwdPtr == IntPtr.Zero) return null;
+
+                int offsetOfPwDir = IntPtr.Size * 6;
+                IntPtr pwDirPtr = Marshal.ReadIntPtr(pwdPtr, offsetOfPwDir);
+                if (pwDirPtr == IntPtr.Zero) return null;
+
+                string home = Marshal.PtrToStringAnsi(pwDirPtr);
+                return home;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
         public override IntPtr OpenLibrary(string filename)
         {
             return dlopen(filename, RTLD_NOW | RTLD_GLOBAL);
