@@ -44,7 +44,7 @@ namespace libomtnet
     /// 
     /// Interlaced: Frames are interlaced
     /// 
-    /// Alpha: Frames contain an alpha channel
+    /// Alpha: Frames contain an alpha channel. If this is not set, BGRA will be encoded as BGRX and UYVA will be encoded as UYVY.
     /// 
     /// PreMultiplied: When combined with Alpha, alpha channel is premultiplied, otherwise straight
     /// 
@@ -69,6 +69,12 @@ namespace libomtnet
     /// UYVY = 16bpp YUV format
     /// 
     /// YUY2 = 16bpp YUV format YUYV pixel order
+    /// 
+    /// UYVA = 16pp YUV format immediately followed by an alpha plane
+    /// 
+    /// NV12 = Planar 4:2:0 YUV format. Y plane followed by interleaved half height U/V plane.
+    /// 
+    /// YV12 = Planar 4:2:0 YUV format. Y plane followed by half height U and V planes.
     /// 
     /// BGRA = 32bpp RGBA format (Same as ARGB32 on Win32)
     /// 
@@ -96,6 +102,12 @@ namespace libomtnet
         iOS = 4
     }
 
+    /// <summary>
+    /// Specify the color space of the uncompressed Frame. This is used to determine the color space for YUV<>RGB conversions internally.
+    /// 
+    /// If undefined, the codec will assume BT601 for heights < 720, BT709 for everything else.
+    /// 
+    /// </summary>
     public enum OMTColorSpace
     {
         Undefined = 0,
@@ -246,12 +258,18 @@ namespace libomtnet
     [StructLayout(LayoutKind.Sequential)]
     public struct OMTMediaFrame
     {
+
+        /// <summary>
+        /// Specify the type of frame. This determines which values of this struct are valid/used.
+        /// </summary>
         public OMTFrameType Type;
 
         /// <summary>
         /// This is a timestamp where 1 second = 10,000,000
         /// 
-        /// This should represent the accurate time the frame or audio sample was generated at the source and be used on the receiving end to synchronize
+        /// This should not be left 0 unless this is the very first frame.
+        /// 
+        /// This should represent the accurate time the frame or audio sample was generated at the original source and be used on the receiving end to synchronize
         /// and record to file as a presentation timestamp (pts).
         /// 
         /// A special value of -1 can be specified to tell the Sender to generate timestamps and throttle as required to maintain
@@ -263,13 +281,13 @@ namespace libomtnet
         /// <summary>
         /// Sending:
         /// 
-        ///     Video: 'UYVY', 'YUY2', 'NV12', 'YV12, 'BGRA', 'VMX1' are supported (BGRA will be treated as BGRX where alpha flags are not set)
+        ///     Video: 'UYVY', 'YUY2', 'NV12', 'YV12, 'BGRA', 'UYVA', 'VMX1' are supported (BGRA will be treated as BGRX and UYVA as UYVY where alpha flags are not set)
         ///     
         ///     Audio: Only 'FPA1' is supported (32bit floating point planar audio)
         ///     
         /// Receiving:
         /// 
-        ///     Video: Only 'UYVY', 'BGRA' and 'BGRX' are supported
+        ///     Video: Only 'UYVY', 'UYVA', 'BGRA' and 'BGRX' are supported
         ///     
         ///     Audio: Only 'FPA1' is supported (32bit floating point planar audio)
         ///     
@@ -279,7 +297,12 @@ namespace libomtnet
         //Video Properties
         public int Width;
         public int Height;
+
+        /// <summary>
+        /// Stride in bytes of each row of pixels. Typically width*2 for UYVY, width*4 for BGRA and just width for planar formats.
+        /// </summary>
         public int Stride;
+
         public OMTVideoFlags Flags;
 
         /// <summary>
@@ -299,14 +322,17 @@ namespace libomtnet
         public OMTColorSpace ColorSpace;
 
         //Audio Properties
+        // Sample rate, i.e 48000, 44100 etc
         public int SampleRate;
+        // Audio Channels. A maximum of 32 channels are supported.
         public int Channels;
+        // Number of 32bit floating point samples per channel/plane. Each plane should contain SamplesPerChannel*4 bytes.
         public int SamplesPerChannel;
 
         //Data Properties
-        
+
         /// <summary>
-        /// Video: Uncompressed pixel data
+        /// Video: Uncompressed pixel data  (or compressed VMX1 data when sending and Codec set to VMX1)
         /// 
         /// Audio: Planar 32bit floating point audio
         /// 
@@ -386,6 +412,9 @@ namespace libomtnet
         }
     }
 
+    /// <summary>
+    /// Tally where 0 = 0 off, 1 = on.
+    /// </summary>
     public struct OMTTally
     {
         public int Preview;

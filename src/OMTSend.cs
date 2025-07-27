@@ -271,6 +271,9 @@ namespace libomtnet
         /// </summary>
         public string URL { get { return address.ToURL(); } }
 
+        /// <summary>
+        /// Total number of connections to this sender. Receivers establish one connection for video/metadata and a second for audio.
+        /// </summary>
         public int Connections { get { 
                 
                 OMTChannel[] ch = channels;
@@ -446,6 +449,7 @@ namespace libomtnet
 
         /// <summary>
         /// Receive any available metadata in the buffer, or wait for metadata if empty
+        /// 
         /// Returns true if metadata was found, false of timed out
         /// </summary>
         /// <param name="millisecondsTimeout">The maximum time to wait for a new frame if empty</param>
@@ -511,8 +515,11 @@ namespace libomtnet
 
         /// <summary>
         /// Send a frame to any receivers currently connected. 
-        /// Video: Supports UYVY, YUY2, RGBA or RGBX frames
+        /// 
+        /// Video: 'UYVY', 'YUY2', 'NV12', 'YV12, 'BGRA', 'UYVA', 'VMX1' are supported (BGRA will be treated as BGRX and UYVA as UYVY where alpha flags are not set)
+        /// 
         /// Audio: Supports planar 32bit floating point audio
+        /// 
         /// Metadata: Supports UTF8 encoded XML 
         /// </summary>
         /// <param name="frame">The frame to send</param>

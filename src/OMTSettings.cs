@@ -31,6 +31,20 @@ using System.IO;
 
 namespace libomtnet
 {
+    /// <summary>
+    /// These functions override the default settings which are stored in ~/.OMT/settings.xml on Mac and Linux and C:\ProgramData\OMT\settings.xml on WIndows
+    /// 
+    /// To override the default folder used for for settings, set the OMT_STORAGE_PATH environment variable prior to calling any OMT functions.
+    /// 
+    /// The following settings are currently supported:
+    /// 
+    /// DiscoveryServer [string] specify a URL in the format omt://hostname:port to connect to for discovery. If left blank, default DNS-SD discovery behavior is enabled.
+    /// 
+    /// NetworkPortStart[integer] specify the first port to create Send instances on.Defaults to 6400
+    /// 
+    /// NetworkPortEnd[integer] specify the last port to create Send instances on.Defaults to 6600
+    /// 
+    /// </summary>
     public class OMTSettings
     {
         private static object globalLock = new object();

@@ -280,7 +280,7 @@ namespace libomtnet
         private void BeginConnect()
         {
             if (lastBeginConnect > DateTime.Now.AddSeconds(-1)) return;
-            lastBeginConnect = DateTime.Now;
+            lastBeginConnect = DateTime.Now;            
             if (discovery != null)
             {
                 OMTAddress address = discovery.FindByFullNameOrUrl(this.address);
@@ -740,9 +740,10 @@ namespace libomtnet
 
         /// <summary>
         /// Receive any available frames in the buffer, or wait for frames if empty
+        /// 
         /// Returns true if a frame was found, false of timed out
         /// </summary>
-        /// <param name="frameTypes">The frame types to receive</param>
+        /// <param name="frameTypes">The frame types to receive. Set multiple types to receive them all in a single thread. Set individually if using separate threads for audio/video/metadata</param>
         /// <param name="millisecondsTimeout">The maximum time to wait for a new frame if empty</param>
         /// <param name="outFrame">The frame struct to fill with the received data</param>
         public bool Receive(OMTFrameType frameTypes, int millisecondsTimeout, ref OMTMediaFrame outFrame)
