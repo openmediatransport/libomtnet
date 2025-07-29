@@ -31,6 +31,8 @@ using libomtnet.codecs;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Diagnostics;
+using System.IO;
+using System.Xml;
 
 namespace libomtnet
 {
@@ -172,6 +174,19 @@ namespace libomtnet
             } 
         }
 
+        /// <summary>
+        /// Use this to inform receivers to connect to a different address.
+        /// 
+        /// This is used to create a "virtual source" that can be dynamically switched as needed.
+        /// 
+        /// This is useful for scenarios where receiver needs to be changed remotely.
+        /// </summary>
+        /// <param name="newAddress">The new address. Set to null or empty to disable redirect.</param>
+        public void SetRedirect(string newAddress)
+        {
+            if (redirect == null) redirect = new OMTRedirect(this);
+            redirect.SetRedirect(newAddress);
+        }
         protected override void DisposeInternal()
         {
             if (tallyHandle != null)
@@ -193,6 +208,11 @@ namespace libomtnet
             lock (videoLock) { }      
             lock (audioLock) { }
             lock (metaLock) { }
+            if (redirect != null)
+            {
+                redirect.Dispose();
+                redirect = null;
+            }
             if (discovery != null)
             {
                 discovery.DeregisterAddress(address);
@@ -303,6 +323,10 @@ namespace libomtnet
                             channel.Send(new OMTMetadata(0, senderInfoXml));
                         }
                         channel.Send(OMTMetadata.FromTally(lastTally));
+                        if (redirect != null)
+                        {
+                            redirect.OnNewConnection(channel);
+                        }
                         OMTLogging.Write("AddConnection: " + socket.RemoteEndPoint.ToString(), "OMTSend.BeginAccept");
                         AddChannel(channel);
                     }

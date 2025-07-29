@@ -52,6 +52,8 @@ namespace libomtnet
         public const string SENDER_INFO_NAME = @"OMTInfo";
         public const string SENDER_INFO_PREFIX = @"<OMTInfo";
         public const string ADDRESS_NAME = @"OMTAddress";
+        public const string REDIRECT_NAME = @"OMTRedirect";
+        public const string REDIRECT_PREFIX = @"<OMTRedirect";
     }
 
     internal class OMTMetadataUtils

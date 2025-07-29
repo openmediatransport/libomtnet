@@ -31,6 +31,7 @@ using System.Threading;
 using libomtnet.codecs;
 using System.Runtime.InteropServices;
 using System.Diagnostics.SymbolStore;
+using System.Runtime.CompilerServices;
 
 namespace libomtnet
 {
@@ -73,6 +74,14 @@ namespace libomtnet
         private OMTDiscoveryClient discoveryClient = null;
 
         private DateTime lastBeginConnect = DateTime.MinValue;
+
+        internal delegate void RedirectChangedEventHandler(object sender, OMTRedirectChangedEventArgs e);
+        internal event RedirectChangedEventHandler RedirectChanged;
+        private string redirectAddress = null;
+        internal bool redirectMetadataOnly = false;
+
+        private OMTFrame lastVideoFrame = null;
+        private OMTFrame lastAudioFrame = null;
 
         private class ConnectionState
         {
@@ -224,6 +233,11 @@ namespace libomtnet
 
             DestroyWaitHandles();
 
+            if (redirect != null)
+            {
+                redirect.Dispose();
+                redirect = null;
+            }
             if (codec != null)
             {
                 codec.Dispose();
@@ -254,12 +268,31 @@ namespace libomtnet
                 tempMetaVideo.Dispose();
                 tempMetaVideo = null;
             }
+            if (lastAudioFrame != null)
+            {
+                lastAudioFrame.Dispose();
+                lastAudioFrame = null;
+            }
+            if (lastVideoFrame != null)
+            {
+                lastVideoFrame.Dispose();
+                lastVideoFrame = null;
+            }
             base.DisposeInternal();
+        }
+               
+        private string GetActualAddress()
+        {
+            if (!String.IsNullOrEmpty(this.redirectAddress))
+            {
+                return this.redirectAddress;
+            }
+            return address;
         }
 
         void IOMTDiscoveryNotify.Notify(OMTAddress address)
         {
-           if (address.ToString() == this.address)
+            if (GetActualAddress() == address.ToString())
             {
                 BeginConnect(address);
             }
@@ -284,7 +317,7 @@ namespace libomtnet
             lastBeginConnect = DateTime.Now;            
             if (discovery != null)
             {
-                OMTAddress address = discovery.FindByFullNameOrUrl(this.address);
+                OMTAddress address = discovery.FindByFullNameOrUrl(GetActualAddress());
                 if (address != null)
                 {
                     BeginConnect(address);
@@ -292,7 +325,7 @@ namespace libomtnet
             }
             else
             {
-                OMTAddress address = OMTDiscovery.CreateFromUrl(this.address);
+                OMTAddress address = OMTDiscovery.CreateFromUrl(GetActualAddress());
                 if (address != null)
                 {
                     BeginConnect(address);
@@ -388,7 +421,7 @@ namespace libomtnet
                             this.videoChannel.StartReceive();
                             this.videoChannel.Send(new OMTMetadata(0, OMTMetadataConstants.CHANNEL_SUBSCRIBE_METADATA));
                         }
-                        OMTLogging.Write("Connected: " + address.ToString(), "OMTReceive.Connect");
+                        OMTLogging.Write("Connected: " + GetActualAddress().ToString(), "OMTReceive.Connect");
                         if (discoveryClient != null)
                         {
                             discoveryClient.Connected();
@@ -456,55 +489,164 @@ namespace libomtnet
                 }
             }
         }
+
+        public string RedirectAddress {  get { return this.redirectAddress;  } }
+
+        internal void OnRedirectConnection(string newAddress)
+        {
+            if (Exiting) return;
+            if (this.redirectAddress != newAddress)
+            {
+                this.redirectAddress = newAddress;
+                OMTLogging.Write("Redirecting " + this.address + " to " + this.redirectAddress, "OMTReceive");
+                ThreadPool.QueueUserWorkItem(ReconnectAsync);
+            }
+        }
+
+        internal void ReconnectAsync(object state)
+        {
+            try
+            {
+                OMTLogging.Write("Reconnect: " + GetActualAddress(), "OMTReceive");
+                lock (connectSync)
+                {
+                    if (Exiting) return;
+                    CloseChannels();
+                    lastBeginConnect = DateTime.MinValue;
+                    BeginConnect();
+                }
+            }
+            catch (Exception ex)
+            {
+                OMTLogging.Write(ex.ToString(), "OMTReceive.Reconnect");
+            }
+        }
+
+        internal override void OnRedirectChanged(OMTChannel ch)
+        {
+            try
+            {
+                if (ch != null)
+                {
+                    if (Exiting) return;
+                    string newAddress = ch.RedirectAddress;
+                    if (this.address != newAddress)
+                    {
+                        if (redirectMetadataOnly)
+                        {
+                            //Notify the sender of a change in redirect upstream
+                            RedirectChanged?.Invoke(this, new OMTRedirectChangedEventArgs(newAddress));
+                        }
+                        else
+                        {
+                            if (this.redirectAddress != newAddress)
+                            {
+                                //This is a normal Receiver, establish a side connection to keep track of changes
+                                this.redirectAddress = newAddress;
+                                if (String.IsNullOrEmpty(this.redirectAddress))
+                                {
+                                    if (redirect != null)
+                                    {
+                                        redirect.Dispose();
+                                        redirect = null;
+                                    }
+                                }
+                                else
+                                {
+                                    if (redirect == null)
+                                    {
+                                        redirect = new OMTRedirect(this);
+                                    }
+                                    redirect.OnReceiveChanged();
+                                    OMTLogging.Write("Redirecting " + this.address + " to " + this.redirectAddress, "OMTReceive");
+                                    ThreadPool.QueueUserWorkItem(ReconnectAsync);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                OMTLogging.Write(ex.ToString(), "OMTReceive");
+            }
+        }
+
         private OMTFrameBase ReceiveInternal(OMTFrameType frameTypes)
         {
+            OMTChannel v = videoChannel;
+            OMTChannel a = audioChannel;
+
             if (frameTypes.HasFlag(OMTFrameType.Video))
             {
-                if (videoChannel != null)
+                if (v != null)
                 {
-                    if (videoChannel.ReadyFrameCount > 0)
+                    if (lastVideoFrame != null)
                     {
-                        return videoChannel.ReceiveFrame();
+                        v.ReturnFrame(lastVideoFrame);
+                        lastVideoFrame = null;
+                    }
+                    if (v.ReadyFrameCount > 0)
+                    {
+                        lastVideoFrame = v.ReceiveFrame();
+                        return lastVideoFrame;
                     }
                 }
             }
             if (frameTypes.HasFlag(OMTFrameType.Audio))
             {
-                if (audioChannel != null)
+                if (a != null)
                 {
-                    if (audioChannel.ReadyFrameCount > 0)
+                    if (lastAudioFrame != null)
                     {
-                        return audioChannel.ReceiveFrame();
+                        a.ReturnFrame(lastAudioFrame);
+                        lastAudioFrame = null;
+                    }
+                    if (a.ReadyFrameCount > 0)
+                    {
+                        lastAudioFrame = a.ReceiveFrame();
+                        return lastAudioFrame;
                     }
                 }
             }
             if (frameTypes.HasFlag(OMTFrameType.Metadata))
             {
-                if (videoChannel != null)
+                if (v != null)
                 {
-                    if (videoChannel.ReadyMetadataCount > 0)
+                    if (v.ReadyMetadataCount > 0)
                     {
-                        return videoChannel.ReceiveMetadata();
+                        return v.ReceiveMetadata();
                     }
                 }
-                if (audioChannel != null)
+                if (a != null)
                 {
-                    if (audioChannel.ReadyMetadataCount > 0)
+                    if (a.ReadyMetadataCount > 0)
                     {
-                        return audioChannel.ReceiveMetadata();
+                        return a.ReceiveMetadata();
                     }
                 }
             }
             return null;
         }
-        private OMTFrameBase ReceiveInternal(OMTFrameType frameTypes, int millisecondsTimeout)
+
+        internal void CheckConnection()
         {
-            if (Exiting) return null;
-            if (frameTypes == OMTFrameType.None) return null;
+            if (Exiting) return;
             if (!IsConnected())
             {
                 BeginConnect();
             }
+            if (redirect != null)
+            {
+                redirect.CheckConnection();
+            }
+        }
+
+        private OMTFrameBase ReceiveInternal(OMTFrameType frameTypes, int millisecondsTimeout)
+        {
+            if (Exiting) return null;
+            if (frameTypes == OMTFrameType.None) return null;
+            CheckConnection();
             OMTFrameBase frame = ReceiveInternal(frameTypes);
             if (frame == null)
             {
@@ -589,6 +731,7 @@ namespace libomtnet
         {
             if (Exiting) return 0;
             if (metadata.Type != OMTFrameType.Metadata) return 0;
+            CheckConnection();
             OMTMetadata m = OMTMetadata.FromMediaFrame(metadata);
             if (m != null)
             {
@@ -695,10 +838,10 @@ namespace libomtnet
                                 tempVideoStride = header.Width * 2;
                                 result = codec.Decode(VMXImageType.UYVA, frame.Data.Buffer, frameLength, ref dst, tempVideoStride);
                                 videoFrame.Codec = (int)OMTCodec.UYVA;
-                            } else if (preferredVideoFormat == OMTPreferredVideoFormat.UYVYorUYVAorP216orPA16)
+                            } else if (preferredVideoFormat == OMTPreferredVideoFormat.UYVYorUYVAorP216orPA16 | preferredVideoFormat == OMTPreferredVideoFormat.P216)
                             {
                                 tempVideoStride = header.Width * 2;
-                                if (alpha)
+                                if (alpha & preferredVideoFormat != OMTPreferredVideoFormat.P216)
                                 {
                                     result = codec.Decode(VMXImageType.PA16, frame.Data.Buffer, frameLength, ref dst, tempVideoStride);
                                     videoFrame.Codec = (int)OMTCodec.PA16;

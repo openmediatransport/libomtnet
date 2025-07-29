@@ -30,7 +30,8 @@ namespace libomtnet
     {
         None = 0,
         TallyChanged = 1,
-        Disconnected = 2
+        Disconnected = 2,
+        RedirectChanged = 3
     }
 
     internal class OMTEventArgs : EventArgs
@@ -41,5 +42,15 @@ namespace libomtnet
             this.eventType = eventType;
         }
         public OMTEventType Type { get { return eventType; } set { eventType = value; } }
+    }
+
+    internal class OMTRedirectChangedEventArgs : EventArgs
+    {
+        private string newAddress;
+        public OMTRedirectChangedEventArgs(string newAddress)
+        {
+            this.newAddress = newAddress;
+        }
+        public string NewAddress { get { return newAddress; } }
     }
 }

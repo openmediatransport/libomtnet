@@ -46,7 +46,6 @@ namespace libomtnet
         private OMTFrame pendingFrame;
         private readonly Queue<OMTFrame> readyFrames;
         private AutoResetEvent frameReadyEvent;
-        private OMTFrame lastReadFrame;
         private OMTFrameType subscriptions = OMTFrameType.None;
         private readonly Queue<OMTMetadata> metadatas;
         private AutoResetEvent metadataReadyEvent;
@@ -63,8 +62,11 @@ namespace libomtnet
         public event ChangedEventHandler Changed;
         private OMTEventArgs tempEvent = new OMTEventArgs(OMTEventType.None);
 
-        public IPEndPoint RemoteEndPoint { get { return endPoint; } }
+        private string redirectAddress = null;
 
+        public string RedirectAddress {  get { return redirectAddress;  } }
+        public IPEndPoint RemoteEndPoint { get { return endPoint; } }
+        
         public OMTChannel(Socket sck, OMTFrameType receiveFrameType, AutoResetEvent frameReady, AutoResetEvent metadataReady, bool metadataServer)
         {
             socket = sck;
@@ -254,19 +256,32 @@ namespace libomtnet
             lock (readyFrames)
             {
                 if (Exiting) return null;
-                if (lastReadFrame != null)
-                {
-                    framePool.Return(lastReadFrame);
-                    lastReadFrame = null;
-                }
                 if (readyFrames.Count > 0)
                 {
-                    lastReadFrame = readyFrames.Dequeue();
-                    return lastReadFrame;
+                    return readyFrames.Dequeue();
                 }
             }
             return null;
         }
+
+        public void ReturnFrame(OMTFrame frame)
+        {
+            lock (readyFrames)
+            {
+                if (frame != null)
+                {
+                    if (Exiting)
+                    {
+                        frame.Dispose();
+                    }
+                    else
+                    {
+                        framePool.Return(frame);
+                    }
+                }
+            }
+        }
+
         public OMTMetadata ReceiveMetadata()
         {
             lock (metadatas)
@@ -364,6 +379,11 @@ namespace libomtnet
                 } else if (xml.StartsWith(OMTMetadataTemplates.SENDER_INFO_PREFIX))
                 {
                     senderInfo = OMTSenderInfo.FromXML(xml);
+                    return true;
+                } else if (xml.StartsWith(OMTMetadataTemplates.REDIRECT_PREFIX))
+                {
+                    this.redirectAddress = OMTRedirect.FromXML(xml);
+                    OnEvent(OMTEventType.RedirectChanged);
                     return true;
                 }
                 lock (metadatas)
@@ -512,11 +532,6 @@ namespace libomtnet
                 metadatas.Clear();
             }
             CloseSocket();
-            if (lastReadFrame != null)
-            {
-                lastReadFrame.Dispose();
-                lastReadFrame = null;
-            }
             if (receiveargs != null)
             {
                 receiveargs.Completed -= Receive_Completed;

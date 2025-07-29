@@ -232,25 +232,29 @@ namespace libomtnet
 
         public string ToXML()
         {
-            StringWriter sw = new StringWriter();
-            XmlTextWriter t = new XmlTextWriter(sw);
-            t.Formatting = Formatting.Indented;
-            t.WriteStartElement(OMTMetadataTemplates.ADDRESS_NAME);
-            t.WriteElementString("Name", ToString());
-            t.WriteElementString("Port", port.ToString());
-            if (removed)
+            using (StringWriter sw = new StringWriter())
             {
-                t.WriteElementString("Removed", "True");
+                using (XmlTextWriter t = new XmlTextWriter(sw))
+                {
+                    t.Formatting = Formatting.Indented;
+                    t.WriteStartElement(OMTMetadataTemplates.ADDRESS_NAME);
+                    t.WriteElementString("Name", ToString());
+                    t.WriteElementString("Port", port.ToString());
+                    if (removed)
+                    {
+                        t.WriteElementString("Removed", "True");
+                    }
+                    t.WriteStartElement("Addresses");
+                    foreach (IPAddress ip in addresses)
+                    {
+                        t.WriteElementString("IPAddress", ip.ToString());
+                    }
+                    t.WriteEndElement();
+                    t.WriteEndElement();
+                    return sw.ToString();
+                }
             }
-            t.WriteStartElement("Addresses");
-            foreach (IPAddress ip in addresses)
-            {
-                t.WriteElementString("IPAddress", ip.ToString());
-            }
-            t.WriteEndElement();
-            t.WriteEndElement();
-            t.Close();
-            return sw.ToString();
+
         }
 
         public static OMTAddress FromXML(string xml)

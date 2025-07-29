@@ -37,6 +37,7 @@ namespace libomtnet
         protected object videoLock = new object();
         protected object audioLock = new object();
         protected object metaLock = new object();
+
         protected AutoResetEvent metadataHandle;
         protected AutoResetEvent tallyHandle;
         protected IntPtr lastMetadata;
@@ -47,6 +48,7 @@ namespace libomtnet
         private long codecTimeSinceLast = 0;
         private long codecStartTime = 0;
 
+        internal OMTRedirect redirect = null;
 
         /// <summary>
         /// Receives the current tally state across all connections to a Sender.
@@ -80,6 +82,7 @@ namespace libomtnet
 
         internal void Channel_Changed(object sender, OMTEventArgs e)
         {
+            if (Exiting) return; //Avoid deadlock where Channel may call back into sender while dispose is in progress.
             if (e.Type == OMTEventType.TallyChanged)
             {
                 UpdateTally();
@@ -90,7 +93,16 @@ namespace libomtnet
                     OMTChannel ch = (OMTChannel)sender;
                     OnDisconnected(ch);
                 }
+            } else if (e.Type == OMTEventType.RedirectChanged)
+            {
+                OMTChannel ch = (OMTChannel)sender;
+                OnRedirectChanged(ch);
             }
+        }
+
+        internal virtual void OnRedirectChanged(OMTChannel ch)
+        {
+
         }
 
         internal virtual void OnDisconnected(OMTChannel ch)

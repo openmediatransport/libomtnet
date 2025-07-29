@@ -140,6 +140,8 @@ namespace libomtnet
     /// 
     /// UYVYorUYVAorP216orPA16 will provide P216 if sender encoded with high bit depth, or PA16 if sender encoded with high bit depth and alpha. Otherwise same as UYVYorUYVA.
     /// 
+    /// P216 To receive only P216 frames
+    /// 
     /// </summary>
     public enum OMTPreferredVideoFormat
     {
@@ -147,7 +149,8 @@ namespace libomtnet
         UYVYorBGRA = 1,
         BGRA = 2,
         UYVYorUYVA = 3,
-        UYVYorUYVAorP216orPA16 = 4
+        UYVYorUYVAorP216orPA16 = 4,
+        P216 = 5
     }
 
     /// <summary>
