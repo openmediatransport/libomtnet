@@ -50,6 +50,11 @@ namespace libomtnet
     /// 
     /// Preview: Frame is a special 1/8th preview frame
     /// 
+    /// HighBitDepth: Sender automatically adds this flag for frames encoded using P216 or PA16 pixel formats.
+    /// 
+    /// Set this manually for VMX1 compressed data where the the frame was originally encoded using P216 or PA16.
+    /// This determines which pixel format is selected on the decode side.
+    /// 
     /// </summary>
     [Flags]
     public enum OMTVideoFlags
@@ -58,7 +63,8 @@ namespace libomtnet
         Interlaced = 1,
         Alpha = 2,
         PreMultiplied = 4,
-        Preview = 8
+        Preview = 8,
+        HighBitDepth = 16
     }
 
     /// <summary>
@@ -66,17 +72,21 @@ namespace libomtnet
     /// 
     /// VMX1 = Fast video codec
     /// 
-    /// UYVY = 16bpp YUV format
+    /// UYVY = 8-bit YUV format
     /// 
-    /// YUY2 = 16bpp YUV format YUYV pixel order
+    /// YUY2 = 8-bit YUV format with YUYV pixel order
     /// 
-    /// UYVA = 16pp YUV format immediately followed by an alpha plane
+    /// UYVA = 8-bit YUV format immediately followed by an alpha plane
     /// 
     /// NV12 = Planar 4:2:0 YUV format. Y plane followed by interleaved half height U/V plane.
     /// 
     /// YV12 = Planar 4:2:0 YUV format. Y plane followed by half height U and V planes.
     /// 
     /// BGRA = 32bpp RGBA format (Same as ARGB32 on Win32)
+    /// 
+    /// P216 = Planar 4:2:2 YUV format. 16bit Y plane followed by interlaved 16bit UV plane.
+    /// 
+    /// PA16 = Same as P216 followed by an additional 16bit alpha plane.
     /// 
     /// FPA1 = Floating-point Planar Audio 32bit
     /// 
@@ -91,6 +101,8 @@ namespace libomtnet
         NV12 = 0x3231564E,
         YV12 = 0x32315659,
         UYVA = 0x41565955,
+        P216 = 0x36313250,
+        PA16 = 0x36314150
     }
 
     public enum OMTPlatformType
@@ -126,6 +138,8 @@ namespace libomtnet
     /// 
     /// UYVYorUYVA will provide UYVA only when alpha channel is present.
     /// 
+    /// UYVYorUYVAorP216orPA16 will provide P216 if sender encoded with high bit depth, or PA16 if sender encoded with high bit depth and alpha. Otherwise same as UYVYorUYVA.
+    /// 
     /// </summary>
     public enum OMTPreferredVideoFormat
     {
@@ -133,6 +147,7 @@ namespace libomtnet
         UYVYorBGRA = 1,
         BGRA = 2,
         UYVYorUYVA = 3,
+        UYVYorUYVAorP216orPA16 = 4
     }
 
     /// <summary>

@@ -31,11 +31,9 @@ BYTE FrameType // Metadata = 1, Video = 2, Audio = 4
 
 INT64 Timestamp // Timestamp where 1 second = 10,000,000
 
-BYTE Reserved1
+UINT16 MetadataLength // Length of XML UTF-8 per-frame metadata including null character.
 
-BYTE Reserved2
-
-INT32 DataLength //ExtendedHeader + Data length, excluding this header
+INT32 DataLength //ExtendedHeader + Data length + MetadataLength, excluding this header
 
 ### VIDEO EXTENDED HEADER (32 bytes) (Mandatory for video frame type)
 
@@ -71,7 +69,7 @@ INT32 Reserved1 //Reserved for future use
 
 ### DATA
 
-The frame data.
+The frame data followed by the per-frame metadata
 
 ### Latency considerations
 

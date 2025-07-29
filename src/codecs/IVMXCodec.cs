@@ -46,11 +46,15 @@ namespace libomtnet.codecs
         int VMX_EncodeBGRX(IntPtr Instance, IntPtr src, int stride, int interlaced);
         int VMX_EncodeUYVY(IntPtr Instance, IntPtr src, int stride, int interlaced);
         int VMX_EncodeUYVA(IntPtr Instance, IntPtr src, int stride, int interlaced);
+        int VMX_EncodeP216(IntPtr Instance, IntPtr src, int stride, int interlaced);
+        int VMX_EncodePA16(IntPtr Instance, IntPtr src, int stride, int interlaced);
         int VMX_EncodeYUY2(IntPtr Instance, IntPtr src, int stride, int interlaced);
         int VMX_EncodeNV12(IntPtr Instance, IntPtr srcY, int strideY, IntPtr srcUV, int strideUV, int interlaced);
         int VMX_EncodeYV12(IntPtr Instance, IntPtr srcY, int strideY, IntPtr srcU, int strideU, IntPtr srcV, int strideV, int interlaced);
         int VMX_DecodeUYVY(IntPtr Instance, byte[] dst, int stride);
         int VMX_DecodeUYVA(IntPtr Instance, byte[] dst, int stride);
+        int VMX_DecodeP216(IntPtr Instance, byte[] dst, int stride);
+        int VMX_DecodePA16(IntPtr Instance, byte[] dst, int stride);
         int VMX_DecodeYUY2(IntPtr Instance, byte[] dst, int stride);
         int VMX_DecodeBGRX(IntPtr Instance, byte[] dst, int stride);
         int VMX_DecodeBGRA(IntPtr Instance, byte[] dst, int stride);

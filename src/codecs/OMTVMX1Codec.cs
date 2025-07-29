@@ -68,7 +68,9 @@ namespace libomtnet.codecs
         YV12 = 4,
         BGRA = 5,
         BGRX = 6,
-        UYVA = 7
+        UYVA = 7,
+        P216 = 8,
+        PA16 = 9
     }
 
     /// <summary>
@@ -132,6 +134,12 @@ namespace libomtnet.codecs
                     break;
                 case VMXImageType.UYVA:
                     hr = codec.VMX_EncodeUYVA(instance, src, srcStride, i);
+                    break;
+                case VMXImageType.P216:
+                    hr = codec.VMX_EncodeP216(instance, src, srcStride, i);
+                    break;
+                case VMXImageType.PA16:
+                    hr = codec.VMX_EncodePA16(instance, src, srcStride, i);
                     break;
                 case VMXImageType.YUY2:
                     hr = codec.VMX_EncodeYUY2(instance, src, srcStride, i);
@@ -213,6 +221,12 @@ namespace libomtnet.codecs
                         break;
                     case VMXImageType.UYVA:
                         hr = codec.VMX_DecodeUYVA(instance, dst, dstStride);
+                        break;
+                    case VMXImageType.P216:
+                        hr = codec.VMX_DecodeP216(instance, dst, dstStride);
+                        break;
+                    case VMXImageType.PA16:
+                        hr = codec.VMX_DecodePA16(instance, dst, dstStride);
                         break;
                     default:
                         return false;

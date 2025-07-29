@@ -190,11 +190,12 @@ namespace libomtnet
                 codec = new OMTVMX1Codec(width, height, framesPerSecond, VMXProfile.Default, colorSpace);
             }
             tempVideoStride = width * 4;
-            int len = tempVideoStride * height * 4;
+            int len = tempVideoStride * height * 2;
             if (tempVideo == null)
             {
                 tempVideo = new OMTPinnedBuffer(len);
-            } else if (tempVideo.Length < len)
+            }
+            else if (tempVideo.Length < len)
             {
                 tempVideo.Dispose();
                 tempVideo = new OMTPinnedBuffer(len);
@@ -610,6 +611,7 @@ namespace libomtnet
                     bool alpha = flags.HasFlag(OMTVideoFlags.Alpha);
                     bool preview = flags.HasFlag(OMTVideoFlags.Preview);
                     bool interlaced = flags.HasFlag(OMTVideoFlags.Interlaced);
+                    bool highBitDepth = flags.HasFlag(OMTVideoFlags.HighBitDepth);
                     int frameLength = frame.Data.Length - frame.MetadataLength;
                     int framesPerSecond = (int)OMTUtils.ToFrameRate(header.FrameRateN, header.FrameRateD);
 
@@ -625,13 +627,19 @@ namespace libomtnet
                             header.Width = sz.Width;
                             header.Height = sz.Height;
 
-                            if (preferredVideoFormat == OMTPreferredVideoFormat.UYVY | (preferredVideoFormat == OMTPreferredVideoFormat.UYVYorBGRA & (alpha == false)) | (preferredVideoFormat == OMTPreferredVideoFormat.UYVYorUYVA & (alpha == false)))
+                            if (preferredVideoFormat == OMTPreferredVideoFormat.UYVY | 
+                                (preferredVideoFormat == OMTPreferredVideoFormat.UYVYorBGRA & (alpha == false)) | 
+                                (preferredVideoFormat == OMTPreferredVideoFormat.UYVYorUYVA & (alpha == false)) |
+                                (preferredVideoFormat == OMTPreferredVideoFormat.UYVYorUYVAorP216orPA16 & (alpha == false))
+                                )
                             {
                                 tempVideoStride = header.Width * 2;
                                 result = codec.DecodePreview(VMXImageType.UYVY, frame.Data.Buffer, frameLength, ref dst, tempVideoStride);
                                 videoFrame.Codec = (int)OMTCodec.UYVY;
                             }
-                            else if (preferredVideoFormat == OMTPreferredVideoFormat.BGRA | (preferredVideoFormat == OMTPreferredVideoFormat.UYVYorBGRA & alpha))
+                            else if (preferredVideoFormat == OMTPreferredVideoFormat.BGRA | 
+                                (preferredVideoFormat == OMTPreferredVideoFormat.UYVYorBGRA & alpha)
+                                )
                             {
                                 tempVideoStride = header.Width * 4;
                                 if (alpha)
@@ -644,7 +652,9 @@ namespace libomtnet
                                 }
                                 videoFrame.Codec = (int)OMTCodec.BGRA;
                             }
-                            else if (preferredVideoFormat == OMTPreferredVideoFormat.UYVYorUYVA & alpha)
+                            else if ((preferredVideoFormat == OMTPreferredVideoFormat.UYVYorUYVA & alpha) |
+                                (preferredVideoFormat == OMTPreferredVideoFormat.UYVYorUYVAorP216orPA16 & alpha)
+                                )
                             {
                                 tempVideoStride = header.Width * 2;
                                 result = codec.DecodePreview(VMXImageType.UYVA, frame.Data.Buffer, frameLength, ref dst, tempVideoStride);
@@ -653,13 +663,19 @@ namespace libomtnet
                         }
                         else
                         {
-                            if (preferredVideoFormat == OMTPreferredVideoFormat.UYVY | (preferredVideoFormat == OMTPreferredVideoFormat.UYVYorBGRA & (alpha == false)))
+                            if (preferredVideoFormat == OMTPreferredVideoFormat.UYVY |
+                                (preferredVideoFormat == OMTPreferredVideoFormat.UYVYorUYVA & (alpha == false)) |
+                                (preferredVideoFormat == OMTPreferredVideoFormat.UYVYorBGRA & (alpha == false)) |
+                                (preferredVideoFormat == OMTPreferredVideoFormat.UYVYorUYVAorP216orPA16 & (alpha == false & highBitDepth == false))
+                                )
                             {
                                 tempVideoStride = header.Width * 2;
                                 result = codec.Decode(VMXImageType.UYVY, frame.Data.Buffer, frameLength, ref dst, tempVideoStride);
                                 videoFrame.Codec = (int)OMTCodec.UYVY;
                             }
-                            else if (preferredVideoFormat == OMTPreferredVideoFormat.BGRA | (preferredVideoFormat == OMTPreferredVideoFormat.UYVYorBGRA & alpha))
+                            else if (preferredVideoFormat == OMTPreferredVideoFormat.BGRA | 
+                                (preferredVideoFormat == OMTPreferredVideoFormat.UYVYorBGRA & alpha)
+                                )
                             {
                                 tempVideoStride = header.Width * 4;
                                 if (alpha)
@@ -672,11 +688,28 @@ namespace libomtnet
                                 }
                                 videoFrame.Codec = (int)OMTCodec.BGRA;
                             }
-                            else if (preferredVideoFormat == OMTPreferredVideoFormat.UYVYorUYVA & alpha)
+                            else if ((preferredVideoFormat == OMTPreferredVideoFormat.UYVYorUYVA & alpha) |
+                                (preferredVideoFormat == OMTPreferredVideoFormat.UYVYorUYVAorP216orPA16 & (alpha & highBitDepth == false))
+                                )
                             {
                                 tempVideoStride = header.Width * 2;
                                 result = codec.Decode(VMXImageType.UYVA, frame.Data.Buffer, frameLength, ref dst, tempVideoStride);
                                 videoFrame.Codec = (int)OMTCodec.UYVA;
+                            } else if (preferredVideoFormat == OMTPreferredVideoFormat.UYVYorUYVAorP216orPA16)
+                            {
+                                tempVideoStride = header.Width * 2;
+                                if (alpha)
+                                {
+                                    result = codec.Decode(VMXImageType.PA16, frame.Data.Buffer, frameLength, ref dst, tempVideoStride);
+                                    videoFrame.Codec = (int)OMTCodec.PA16;
+                                } else
+                                {
+                                    result = codec.Decode(VMXImageType.P216, frame.Data.Buffer, frameLength, ref dst, tempVideoStride);
+                                    videoFrame.Codec = (int)OMTCodec.P216;                                    
+                                }
+                            } else
+                            {
+                                OMTLogging.Write("No matching preferred format found", "OMTReceive");
                             }
                         }
                         EndCodecTimer();
@@ -704,6 +737,11 @@ namespace libomtnet
                             if (videoFrame.Codec == (int)OMTCodec.UYVA)
                             {
                                 videoFrame.DataLength += header.Width * header.Height;
+                            } else if (videoFrame.Codec == (int)OMTCodec.P216) {
+                                videoFrame.DataLength *= 2;
+                            } else if (videoFrame.Codec == (int)OMTCodec.PA16)
+                            {
+                                videoFrame.DataLength *= 3;
                             }
                         }
 

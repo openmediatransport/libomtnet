@@ -52,6 +52,10 @@ namespace libomtnet.codecs
         [DllImport(DLLPATH)]
         internal static extern int VMX_EncodeBGRX(IntPtr Instance, IntPtr src, int stride, int interlaced);
         [DllImport(DLLPATH)]
+        internal static extern int VMX_EncodeP216(IntPtr Instance, IntPtr src, int stride, int interlaced);
+        [DllImport(DLLPATH)]
+        internal static extern int VMX_EncodePA16(IntPtr Instance, IntPtr src, int stride, int interlaced);
+        [DllImport(DLLPATH)]
         internal static extern int VMX_EncodeUYVY(IntPtr Instance, IntPtr src, int stride, int interlaced);
         [DllImport(DLLPATH)]
         internal static extern int VMX_EncodeUYVA(IntPtr Instance, IntPtr src, int stride, int interlaced);
@@ -65,6 +69,10 @@ namespace libomtnet.codecs
         internal static extern int VMX_DecodeUYVY(IntPtr Instance, byte[] dst, int stride);
         [DllImport(DLLPATH)]
         internal static extern int VMX_DecodeUYVA(IntPtr Instance, byte[] dst, int stride);
+        [DllImport(DLLPATH)]
+        internal static extern int VMX_DecodeP216(IntPtr Instance, byte[] dst, int stride);
+        [DllImport(DLLPATH)]
+        internal static extern int VMX_DecodePA16(IntPtr Instance, byte[] dst, int stride);
         [DllImport(DLLPATH)]
         internal static extern int VMX_DecodeYUY2(IntPtr Instance, byte[] dst, int stride);
         [DllImport(DLLPATH)]
