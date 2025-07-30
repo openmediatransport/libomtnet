@@ -129,7 +129,7 @@ namespace libomtnet.win32
             instance.dwPropertyCount = 0;
             instance.ip4Address = IntPtr.Zero;
             instance.ip6Address = IntPtr.Zero;
-            instance.pszInstanceName = OMTAddress.EscapeFullName(name) + "._omt._tcp.local";
+            instance.pszInstanceName = name.Replace(".", "") + "._omt._tcp.local"; //dots not supported in instance name on Windows
             instance.pszHostName = machineName + ".local";
             instance.wPort = (ushort)port;
             instance.wPriority = 0;
@@ -357,8 +357,7 @@ namespace libomtnet.win32
                         DnsApi.DNS_TYPE wType = (DnsApi.DNS_TYPE)Marshal.ReadInt16(pNext, IntPtr.Size * 2);
                         if (wType == DnsApi.DNS_TYPE.DNS_TYPE_SRV)
                         {
-                            string[] s = name.Split('.');
-                            addressName = s[0];
+                            addressName = ParseAddressName(name);
                             byte[] b = new byte[2];
                             Marshal.Copy(pNext + (IntPtr.Size * 3) + 16 + 4, b, 0, 2);
                             addressPort = BitConverter.ToUInt16(b, 0);
@@ -384,8 +383,7 @@ namespace libomtnet.win32
                             if (!String.IsNullOrEmpty(nameHost))
                             {
                                 dwTtl = Marshal.ReadInt32(pNext, (IntPtr.Size * 2) + 8);
-                                string[] s = nameHost.Split('.');
-                                addressName = s[0];
+                                addressName = ParseAddressName(nameHost);
                             }
                         }
                         pNext = Marshal.ReadIntPtr(pNext);

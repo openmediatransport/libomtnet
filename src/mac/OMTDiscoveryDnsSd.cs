@@ -171,7 +171,7 @@ namespace libomtnet.mac
                 OMTDiscoveryEntry ctx = GetEntry(address);
                 if (ctx == null)
                 {
-                    string addressName = OMTAddress.EscapeFullName(address.ToString());
+                    string addressName = address.ToString();
                     ushort port = (ushort)address.Port;
                     byte[] b = BitConverter.GetBytes(port);
                     Array.Reverse(b);

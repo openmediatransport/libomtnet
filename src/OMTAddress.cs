@@ -125,7 +125,7 @@ namespace libomtnet
 
         public static string SanitizeName(string name)
         {
-            return name.Replace(".", " ");
+            return name; // return name.Replace(".", " ");
         }
 
         public static string UnescapeFullName(string fullName)

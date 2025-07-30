@@ -399,6 +399,16 @@ namespace libomtnet
             return null;
         }
 
+        internal string ParseAddressName(string name)
+        {
+            int pos = name.IndexOf("._omt.");
+            if (pos > 0)
+            {
+                return name.Substring(0, pos);
+            }
+            return name;
+        }
+
         internal void RemoveServerAddresses()
         {
             lock (lockSync)

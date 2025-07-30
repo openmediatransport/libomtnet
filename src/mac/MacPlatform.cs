@@ -39,11 +39,38 @@ namespace libomtnet.mac
         [DllImport("libdl.dylib")]
         static extern IntPtr dlopen(string filename, int flags);
 
-        [DllImport("libc", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        [DllImport("libc")]
         private static extern uint getuid();
 
-        [DllImport("libc", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+        [DllImport("libc")]
         private static extern IntPtr getpwuid(uint uid);
+
+        [DllImport("libc")]
+        private static extern int gethostname(IntPtr name, IntPtr size);
+
+        public override string GetMachineName()
+        {
+            int len = 4096;
+            IntPtr buf = Marshal.AllocHGlobal(len);
+            try
+            {
+                int result = gethostname(buf, (IntPtr)len);
+                if (result == 0)
+                {
+                    string name = OMTUtils.PtrToStringUTF8(buf);
+                    if (!String.IsNullOrEmpty(name))
+                    {
+                        return name.ToUpper();
+                    }
+                }
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(buf);
+            }
+            OMTLogging.Write("Unable to retrieve full hostname", "MacPlatform");
+            return base.GetMachineName();
+        }
 
         public override string GetStoragePath()
         {
