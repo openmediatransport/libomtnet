@@ -102,6 +102,10 @@ namespace libomtnet
             lock (redirectLock)
             {
                 if (Exiting) return;
+                if (this.originalAddress == newAddress)
+                {
+                    newAddress = null; //No redirect in case of loopback
+                }
                 this.redirectAddress = newAddress;
                 SendRedirect();
                 CreateRedirectConnection(newAddress, newAddress);
@@ -111,28 +115,28 @@ namespace libomtnet
         {
             try
             {
-                lock (redirectLock)
+                //This is called by the Receive_Completed on the channel own by this object's receiver, 
+                //so care needs to be taken to ensure this does not go back into that receiver where that lock may be used.
+                if (Exiting) return;
+                if (redirectConnection != null)
                 {
-                    if (redirectConnection != null)
+                    string newAddress = e.NewAddress;
+                    if (newAddress != originalAddress)
                     {
-                        string newAddress = e.NewAddress;
-                        if (newAddress != originalAddress)
+                        if (newAddress != redirectAddress)
                         {
-                            if (newAddress != redirectAddress)
+                            if (this.sender != null)
                             {
-                                if (this.sender != null)
+                                if (newAddress != redirectAddressUpstream)
                                 {
-                                    if (newAddress != redirectAddressUpstream)
-                                    {
-                                        this.redirectAddressUpstream = newAddress;
-                                        OMTLogging.Write("Redirect changed upstream for " + originalAddress + " to " + newAddress, "OMTRedirect");
-                                        SendRedirect();
-                                    }
-                                } else if (this.receiver != null)
-                                {
-                                    this.redirectAddress = newAddress;
-                                    receiver.OnRedirectConnection(newAddress);
+                                    this.redirectAddressUpstream = newAddress;
+                                    OMTLogging.Write("Redirect changed upstream for " + originalAddress + " to " + newAddress, "OMTRedirect");
+                                    SendRedirect();
                                 }
+                            } else if (this.receiver != null)
+                            {
+                                this.redirectAddress = newAddress;
+                                receiver.OnRedirectConnection(newAddress);
                             }
                         }
                     }

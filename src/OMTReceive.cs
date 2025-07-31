@@ -309,6 +309,9 @@ namespace libomtnet
                 audioChannel.Dispose(); 
                 audioChannel = null;
             }
+            //For reconnects where a connection was already in progress and not yet completed, clearing these allows new connection will proceed.
+            audioConnectionState = null;
+            videoConnectionState = null;
         }
 
         private void BeginConnect()
