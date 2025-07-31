@@ -542,28 +542,21 @@ namespace libomtnet
                         }
                         else
                         {
-                            if (this.redirectAddress != newAddress)
+                            if (redirect == null) 
                             {
-                                //This is a normal Receiver, establish a side connection to keep track of changes
-                                this.redirectAddress = newAddress;
-                                if (String.IsNullOrEmpty(this.redirectAddress))
+                                if (this.redirectAddress != newAddress)
                                 {
-                                    if (redirect != null)
-                                    {
-                                        redirect.Dispose();
-                                        redirect = null;
-                                    }
-                                }
-                                else
-                                {
-                                    if (redirect == null)
-                                    {
-                                        redirect = new OMTRedirect(this);
-                                    }
+                                    //This is a normal Receiver, establish a side connection to original address to keep track of changes
+                                    //Side connection is maintained for the life of this receiver
+                                    this.redirectAddress = newAddress;
+                                    redirect = new OMTRedirect(this);
                                     redirect.OnReceiveChanged();
-                                    OMTLogging.Write("Redirecting " + this.address + " to " + this.redirectAddress, "OMTReceive");
+                                    OMTLogging.Write("First redirect of " + this.address + " to " + this.redirectAddress, "OMTReceive");
                                     ThreadPool.QueueUserWorkItem(ReconnectAsync);
                                 }
+                            } else
+                            {
+                                OMTLogging.Write("Skipping redirect to " + newAddress + " due to existing side channel.", "OMTReceive");
                             }
                         }
                     }

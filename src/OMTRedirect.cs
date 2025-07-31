@@ -25,7 +25,6 @@ namespace libomtnet
         {
             this.receiver = receiver;
             this.originalAddress = receiver.Address;
-            OnReceiveChanged();
         }
 
         private void ClearRedirectConnection()
@@ -52,7 +51,8 @@ namespace libomtnet
         {
             if (sender != null)
             {
-                sender.SendMetadata(CreateRedirectMetadata(), null);
+                OMTMetadata metadata = CreateRedirectMetadata();
+                sender.SendMetadata(metadata, null);
             }
         }
 
@@ -83,17 +83,27 @@ namespace libomtnet
 
         private void CreateRedirectConnection(string newAddress, string sideChannelAddress)
         {
-            ClearRedirectConnection();
             if (String.IsNullOrEmpty(newAddress))
             {
                 OMTLogging.Write("Redirect stopped for " + originalAddress, "OMTRedirect");
+                ClearRedirectConnection();
             }
             else
             {
                 OMTLogging.Write("Redirecting " + originalAddress + " to " + newAddress + " and monitoring for updates from " + sideChannelAddress, "OMTRedirect");
-                redirectConnection = new OMTReceive(sideChannelAddress, OMTFrameType.Metadata, OMTPreferredVideoFormat.UYVY, OMTReceiveFlags.None);
-                redirectConnection.redirectMetadataOnly = true;
-                redirectConnection.RedirectChanged += OnRedirectChanged;
+                if (redirectConnection != null)
+                {
+                    if (redirectConnection.Address != sideChannelAddress)
+                    {
+                        ClearRedirectConnection();
+                    }
+                }
+                if (redirectConnection == null)
+                {
+                    redirectConnection = new OMTReceive(sideChannelAddress, OMTFrameType.Metadata, OMTPreferredVideoFormat.UYVY, OMTReceiveFlags.None);
+                    redirectConnection.redirectMetadataOnly = true;
+                    redirectConnection.RedirectChanged += OnRedirectChanged;
+                }
             }
         }
 
@@ -105,6 +115,10 @@ namespace libomtnet
                 if (this.originalAddress == newAddress)
                 {
                     newAddress = null; //No redirect in case of loopback
+                }
+                if (this.redirectAddress != newAddress)
+                {
+                    this.redirectAddressUpstream = null;
                 }
                 this.redirectAddress = newAddress;
                 SendRedirect();
