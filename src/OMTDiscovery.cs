@@ -520,6 +520,7 @@ namespace libomtnet
                     } 
                 }
             }
+            a.Sort();
             return a.ToArray();
         }
 

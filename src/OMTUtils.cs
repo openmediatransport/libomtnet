@@ -70,6 +70,14 @@ namespace libomtnet
             Marshal.Copy(b, 0, dst, b.Length);
             Marshal.WriteByte(dst, b.Length, 0);
         }
+        public static void WriteStringToPtrUTF8(string s, IntPtr dst, int maxLength)
+        {
+            if (maxLength <= 0) return;
+            byte[] b = UTF8Encoding.UTF8.GetBytes(s);
+            int len = Math.Min(maxLength - 1, b.Length);
+            Marshal.Copy(b, 0, dst, len);
+            Marshal.WriteByte(dst, len, 0);
+        }
 
         public static string PtrToStringUTF8(IntPtr ptr)
         {
@@ -82,6 +90,20 @@ namespace libomtnet
                     if (b == 0) break;
                     m.WriteByte(b);
                     offset++;
+                }
+                return UTF8Encoding.UTF8.GetString(m.ToArray());
+            }
+        }
+
+        public static string PtrToStringUTF8(IntPtr ptr, int maxLength)
+        {
+            using (MemoryStream m = new MemoryStream())
+            {
+                for (int i = 0; i < maxLength; i++)
+                {
+                    byte b = Marshal.ReadByte(ptr, i);
+                    if (b == 0) break;
+                    m.WriteByte(b);
                 }
                 return UTF8Encoding.UTF8.GetString(m.ToArray());
             }

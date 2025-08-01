@@ -54,6 +54,7 @@ namespace libomtnet
 
         private OMTQuality suggestedQuality = OMTQuality.Default;
         private string senderInfoXml = null;
+        private List<string> connectionMetadata = new List<string>();
 
         private OMTClock videoClock;
         private OMTClock audioClock;
@@ -171,7 +172,51 @@ namespace libomtnet
             } else
             {
                 this.senderInfoXml = senderInfo.ToXML();
+                SendMetadata(new OMTMetadata(0, this.senderInfoXml), null);
             } 
+        }
+
+        private void SendConnectionMetadata()
+        {
+            lock (connectionMetadata)
+            {
+                foreach (string metadata in connectionMetadata)
+                {
+                    if (!String.IsNullOrEmpty(metadata))
+                    {
+                        SendMetadata(new OMTMetadata(0, metadata), null);
+                    }
+                }
+            }
+        }
+        private void SendConnectionMetadata(OMTChannel ch)
+        {
+            lock (connectionMetadata)
+            {
+                foreach (string metadata in connectionMetadata)
+                {
+                    if (!String.IsNullOrEmpty(metadata))
+                    {
+                        ch.Send(new OMTMetadata(0, metadata));
+                    }
+                }
+            }
+        }
+
+        public void AddConnectionMetadata(string xml)
+        {
+            lock (connectionMetadata)
+            {
+                connectionMetadata.Add(xml);
+            } 
+        }
+
+        public void ClearConnectionMetadata()
+        {
+            lock (connectionMetadata)
+            {
+                connectionMetadata.Clear();
+            }
         }
 
         /// <summary>
@@ -322,6 +367,7 @@ namespace libomtnet
                         {
                             channel.Send(new OMTMetadata(0, senderInfoXml));
                         }
+                        SendConnectionMetadata(channel);
                         channel.Send(OMTMetadata.FromTally(lastTally));
                         if (redirect != null)
                         {

@@ -379,7 +379,7 @@ namespace libomtnet
                 } else if (xml.StartsWith(OMTMetadataTemplates.SENDER_INFO_PREFIX))
                 {
                     senderInfo = OMTSenderInfo.FromXML(xml);
-                    return true;
+                    //Don't return here, as this info should passthrough to receiver as well.
                 } else if (xml.StartsWith(OMTMetadataTemplates.REDIRECT_PREFIX))
                 {
                     this.redirectAddress = OMTRedirect.FromXML(xml);
