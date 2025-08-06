@@ -258,6 +258,7 @@ namespace libomtnet
             {
                 addresses.Add(entry.Address.ToString());
             }
+            addresses.Sort();
             this.addresses = addresses.ToArray();
         }
 
@@ -520,7 +521,6 @@ namespace libomtnet
                     } 
                 }
             }
-            a.Sort();
             return a.ToArray();
         }
 

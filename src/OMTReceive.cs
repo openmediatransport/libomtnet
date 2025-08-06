@@ -88,6 +88,9 @@ namespace libomtnet
             public OMTFrameType frameType;
             public Socket socket;
             public IAsyncResult result;
+
+            //This is set to true to gracefully ignore any successful pending socket connect callbacks when we use Reconnect. 
+            public bool cancelled;
         }
 
         private void DestroyWaitHandles()
@@ -310,8 +313,16 @@ namespace libomtnet
                 audioChannel = null;
             }
             //For reconnects where a connection was already in progress and not yet completed, clearing these allows new connection will proceed.
-            audioConnectionState = null;
-            videoConnectionState = null;
+            if (audioConnectionState != null)
+            {
+                audioConnectionState.cancelled = true;
+                audioConnectionState = null;
+            }
+            if (videoConnectionState != null)
+            {
+                videoConnectionState.cancelled = true;
+                videoConnectionState = null;
+            }
         }
 
         private void BeginConnect()
@@ -372,6 +383,7 @@ namespace libomtnet
         private ConnectionState BeginConnect(OMTFrameType frameType, IPAddress[] ips, int port)
         {
             ConnectionState cs = new ConnectionState();
+            cs.cancelled = false;
             cs.frameType = frameType;
             cs.socket = new Socket(AddressFamily.InterNetworkV6, SocketType.Stream, ProtocolType.Tcp);
             cs.socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
@@ -389,6 +401,12 @@ namespace libomtnet
                     cs.socket.EndConnect(ar);
                     if (ar.IsCompleted)
                     {
+                        if (cs.cancelled)
+                        {
+                            cs.socket.Close();
+                            return;
+                        }
+
                         if (cs.frameType == OMTFrameType.Video)
                         {
                             this.videoChannel = new OMTChannel(cs.socket, OMTFrameType.Video, videoHandle, metadataHandle,false);
@@ -404,7 +422,7 @@ namespace libomtnet
                                 this.videoChannel.Send(new OMTMetadata(0, OMTMetadataConstants.CHANNEL_SUBSCRIBE_VIDEO));
                                 SendSuggestedQuality();
                             }
-                            SendTally();
+                            SendTally();                            
                         }
                         if (cs.frameType == OMTFrameType.Audio)
                         {
@@ -415,16 +433,16 @@ namespace libomtnet
                             {
                                 this.audioChannel.Send(new OMTMetadata(0, OMTMetadataConstants.CHANNEL_SUBSCRIBE_METADATA));
                             }
-                            this.audioChannel.Send(new OMTMetadata(0, OMTMetadataConstants.CHANNEL_SUBSCRIBE_AUDIO));
+                            this.audioChannel.Send(new OMTMetadata(0, OMTMetadataConstants.CHANNEL_SUBSCRIBE_AUDIO));                            
                         }
                         if (cs.frameType == OMTFrameType.Metadata)
                         {
                             this.videoChannel = new OMTChannel(cs.socket, OMTFrameType.Metadata, videoHandle, metadataHandle, false);
                             this.videoChannel.Changed += Channel_Changed;
                             this.videoChannel.StartReceive();
-                            this.videoChannel.Send(new OMTMetadata(0, OMTMetadataConstants.CHANNEL_SUBSCRIBE_METADATA));
+                            this.videoChannel.Send(new OMTMetadata(0, OMTMetadataConstants.CHANNEL_SUBSCRIBE_METADATA));                            
                         }
-                        OMTLogging.Write("Connected: " + GetActualAddress().ToString(), "OMTReceive.Connect");
+                        OMTLogging.Write("Connected." + cs.frameType.ToString() + ": " + GetActualAddress().ToString(), "OMTReceive.Connect");
                         if (discoveryClient != null)
                         {
                             discoveryClient.Connected();
@@ -1059,7 +1077,9 @@ namespace libomtnet
                         }
                         tempAudio.SetBuffer(0, 0);
                         audioCodec.Decode(frame.Data, header.Channels, header.SamplesPerChannel, (OMTActiveAudioChannels)header.ActiveChannels, tempAudio);
+                        
                         audioFrame.Type = OMTFrameType.Audio;
+                        audioFrame.Codec = (int)OMTCodec.FPA1;
                         audioFrame.Timestamp = frame.Timestamp;
                         audioFrame.SampleRate = header.SampleRate;
                         audioFrame.Channels = header.Channels;

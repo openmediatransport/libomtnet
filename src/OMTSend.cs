@@ -784,7 +784,7 @@ namespace libomtnet
             lock (audioLock)
             {
                 if (Exiting) return 0;
-                if (frame.Data != IntPtr.Zero && frame.DataLength > 0)
+                if (frame.Data != IntPtr.Zero && frame.DataLength > 0 && frame.Channels > 0 && frame.SamplesPerChannel > 0 && frame.Channels <= 32)
                 {
                     if (frame.DataLength > OMTConstants.AUDIO_MAX_SIZE)
                     {
