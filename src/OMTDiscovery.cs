@@ -350,14 +350,19 @@ namespace libomtnet
             return DeregisterAddressInternal(address);
         }
 
-        static internal OMTAddress CreateFromUrl(string address)
+        static internal OMTAddress CreateFromUrl(string address, int defaultPort)
         {
             Uri u = null;
             if (Uri.TryCreate(address, UriKind.Absolute, out u))
             {
-                if (u.Port > 0)
+                int port = u.Port;
+                if (port <= 0)
                 {
-                    OMTAddress a = new OMTAddress(u.Host, u.Port.ToString(), u.Port);
+                    port = defaultPort;
+                }
+                if (port > 0)
+                {
+                    OMTAddress a = new OMTAddress(u.Host, port.ToString(), port);
                     IPAddress[] ips = OMTUtils.ResolveHostname(u.Host);
                     if (ips != null && ips.Length > 0)
                     {
@@ -377,7 +382,7 @@ namespace libomtnet
             if (string.IsNullOrEmpty(address)) { return null; }
             if (address.ToLower().StartsWith(OMTConstants.URL_PREFIX))
             {
-                return CreateFromUrl(address);
+                return CreateFromUrl(address, 0);
             }
             else
             {

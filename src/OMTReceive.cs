@@ -339,7 +339,8 @@ namespace libomtnet
             }
             else
             {
-                OMTAddress address = OMTDiscovery.CreateFromUrl(GetActualAddress());
+                int port = OMTPublicConstants.DISCOVERY_SERVER_DEFAULT_PORT;
+                OMTAddress address = OMTDiscovery.CreateFromUrl(GetActualAddress(), port);
                 if (address != null)
                 {
                     BeginConnect(address);

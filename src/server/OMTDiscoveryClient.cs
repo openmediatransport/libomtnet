@@ -34,7 +34,7 @@ using System.Xml;
 namespace libomtnet
 {
     /// <summary>
-    /// This is an enternal class used to manage connection to the OMT Discovery Server
+    /// This is an internal class used to manage connection to the OMT Discovery Server
     /// This should not be used directly by client apps, and is declared public for internal testing purposes only.
     /// </summary>
     public class OMTDiscoveryClient : OMTBase

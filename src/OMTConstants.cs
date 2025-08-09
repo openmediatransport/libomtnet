@@ -29,6 +29,10 @@ using System.Text;
 
 namespace libomtnet
 {
+    public class OMTPublicConstants
+    {
+        public static int DISCOVERY_SERVER_DEFAULT_PORT = 6399;
+    }
     internal class OMTConstants
     {
         public static int NETWORK_SEND_BUFFER = 65536;
