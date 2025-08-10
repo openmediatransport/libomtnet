@@ -12,7 +12,7 @@ Open Media Transport consists of three major components:
 
 1. TCP Protocol for sending/receiving video, audio and metadata.
 2. Special Metadata commands to control various aspects of the connection.
-2. DNS-SD for discovery (RFC 6763).
+3. DNS-SD for discovery (RFC 6763).
 
 ## Data Types
 
@@ -49,7 +49,7 @@ INT32 FrameRateD
 
 FLOAT32 AspectRatio //Display aspect ratio expressed as a ratio of width/height. For example 1.777777777777778 for 16/9
 
-INT32 Flags
+INT32 Flags //Interlaced=1, Alpha=2, PreMultiplied=4, Preview=8, HighBitDepth=16
 
 INT32 ColorSpace //Color space flag. 601 for BT601, 709 for BT709, 0 for undefined (typically BT601 for SD, BT709 for HD)
 
@@ -134,6 +134,8 @@ High
 
 Senders may respond to this by gathering the preferred quality of all receivers, determining the highest quality requested and then adjusting the encoder to match.
 
+Default is Medium quality.
+
 ### Sender Information
 
 \<OMTInfo ProductName="MyProduct" Manufacturer="MyCompany" Version="1.0" /\>
@@ -146,5 +148,37 @@ Open Media Transport uses the service type _omt._tcp
 The port should be the tcp port that sender is listening on
 The full service name should take the form HOSTNAME (Source Name)._omt._tcp.local
 
+## Discovery Server
 
+Discovery Server uses the same communication protocol and frame headers to send and receive XML data.
 
+The server does the following:
+
+1. Keep track of register/deregister XML requests from each client
+2. Determine the IP address to use for each registered source based on the client's connection ip.
+3. Repeat registered requests to all connected clients, including the client that submitted the request.
+4. Repeat all current registration requests to new clients.
+5. Remove all requests from a client that has disconnected, and repeat that removed request to all remaining clients.
+
+### Register XML
+
+\<OMTAddress>  
+\<Name>MYMACHINENAME (My Source Name)\</Name>  
+\<Port>1234\</Port>  
+\<Addresses>  
+\<Address>0.0.0.0\</Address>  
+\</Addresses>  
+\</OMTAddress>
+
+### DeRegister XML
+
+\<OMTAddress>  
+\<Name>MYMACHINENAME (My Source Name)\</Name>  
+\<Port>1234\</Port>  
+\<Removed>True\</Removed>  
+\</OMTAddress>
+
+### IP Addresses
+
+IP Addresses should be determined by the server to ensure only the address accessible to the server is used.
+Therefore when registering a source, the client provided Addresses portion should be ignored.

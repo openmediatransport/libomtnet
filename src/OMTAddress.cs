@@ -95,12 +95,30 @@ namespace libomtnet
                 b128[15] = b[3];
 
                 address = new IPAddress(b128);
+            } else if (address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
+            {
+                if (address.IsIPv6LinkLocal) return false;
             }
             if (!HasAddress(address))
             {
                 List<IPAddress> list = new List<IPAddress>();
-                list.AddRange(this.addresses);
-                list.Add(address);
+                bool v4 = OMTUtils.IsIPv4(address);
+                foreach (IPAddress a in this.addresses)
+                {
+                    if (OMTUtils.IsIPv4(a))
+                    {
+                        list.Add(a);
+                    }
+                }
+                if (v4) list.Add(address);
+                foreach (IPAddress a in this.addresses)
+                {
+                    if (!OMTUtils.IsIPv4(a))
+                    {
+                        list.Add(a);
+                    }
+                }
+                if (!v4) list.Add(address);
                 addresses = list.ToArray();
                 return true;
             }
@@ -316,4 +334,5 @@ namespace libomtnet
             return 0;
         }
     }
+
 }

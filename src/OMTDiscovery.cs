@@ -207,8 +207,10 @@ namespace libomtnet
                         {
                             foreach (IPAddress ip in addresses)
                             {
-                                address.AddAddress(ip);
-                                OMTLogging.Write("NewIP: " + fullName + ":" + port + "," + ip.ToString(),"OMTDiscovery");
+                                if (address.AddAddress(ip))
+                                {
+                                    OMTLogging.Write("NewIP: " + fullName + ":" + port + "," + ip.ToString(), "OMTDiscovery");
+                                }     
                             }
                         }
                         return entry;

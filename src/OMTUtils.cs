@@ -205,5 +205,23 @@ namespace libomtnet
             }
         }
 
+        public static bool IsIPv4(IPAddress address)
+        {
+            if (address != null)
+            {
+                if (address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork) return true;
+                if (address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
+                {
+                    byte[] b = address.GetAddressBytes();
+                    for (int i = 0; i < 10; i++)
+                    {
+                        if (b[i] != 0) return false;
+                    }
+                    if (b[10] == 0xFF && b[11] == 0xFF) return true;
+                }
+            }
+            return false;
+        }
+
     }
 }
