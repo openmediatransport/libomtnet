@@ -37,7 +37,7 @@ namespace libomtnet
     {
         public static int NETWORK_SEND_BUFFER = 65536;
         public static int NETWORK_SEND_RECEIVE_BUFFER = 65536;
-        public static int NETWORK_RECEIVE_BUFFER = 10485760;
+        public static int NETWORK_RECEIVE_BUFFER = 1048576 * 8; //8MB is a safe maximum for MacOS platforms
 
         public static int NETWORK_ASYNC_COUNT = 4;
         public static int NETWORK_ASYNC_BUFFER_AV = 1048576;

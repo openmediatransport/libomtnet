@@ -41,35 +41,44 @@ namespace libomtnet
         private static bool threadRunning;
         private static Queue<string> queue = new Queue<string>();
         private static AutoResetEvent readyEvent = new AutoResetEvent(false);
+        private static bool initialized = false;
 
         static OMTLogging()
         {
-            try
-            {
-                string name = GetProcessNameAndId();
-                if (name != null)
-                {
-                    string szPath = OMTPlatform.GetInstance().GetStoragePath();
-                    if (Directory.Exists(szPath) == false)
-                    {
-                        Directory.CreateDirectory(szPath);
-                    }
-                    szPath = szPath + Path.DirectorySeparatorChar + "logs";
-                    if (Directory.Exists(szPath) == false)
-                    {
-                        Directory.CreateDirectory(szPath);
-                    }
-                    SetFilename(szPath + Path.DirectorySeparatorChar + name + ".log");
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-            }
             loggingThread = new Thread(ProcessLog);
             loggingThread.IsBackground = true;
             threadRunning = true;
             loggingThread.Start();
+        }
+
+        private static void SetDefaultLogFilename()
+        {
+            lock (lockSync)
+            {
+                initialized = true;
+                try
+                {
+                    string name = GetProcessNameAndId();
+                    if (name != null)
+                    {
+                        string szPath = OMTPlatform.GetInstance().GetStoragePath();
+                        if (Directory.Exists(szPath) == false)
+                        {
+                            Directory.CreateDirectory(szPath);
+                        }
+                        szPath = szPath + Path.DirectorySeparatorChar + "logs";
+                        if (Directory.Exists(szPath) == false)
+                        {
+                            Directory.CreateDirectory(szPath);
+                        }
+                        SetFilename(szPath + Path.DirectorySeparatorChar + name + ".log");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.ToString());
+                }
+            }
         }
 
         private static string GetProcessNameAndId()
@@ -118,6 +127,7 @@ namespace libomtnet
         {
             lock (lockSync)
             {
+                initialized = true;
                 if (logStream != null)
                 {
                     logStream.Close();
@@ -140,6 +150,10 @@ namespace libomtnet
                 Debug.WriteLine(line);
                 lock (lockSync)
                 {
+                    if (!initialized)
+                    {
+                        SetDefaultLogFilename();
+                    }
                     if (logWriter != null)
                     {
                         queue.Enqueue(line);
