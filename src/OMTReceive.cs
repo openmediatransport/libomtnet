@@ -452,6 +452,17 @@ namespace libomtnet
                 }
                 catch (Exception ex)
                 {
+                    try
+                    {
+                        if (cs.socket != null)
+                        {
+                            cs.socket.Close();
+                        }
+                    }
+                    catch (Exception ex2)
+                    {
+                        OMTLogging.Write(ex2.ToString(), "OMTReceive.Connect");
+                    }
                     OMTLogging.Write(ex.Message, "OMTReceive.Connect");
                 }
                 if (cs.frameType == OMTFrameType.Video || cs.frameType == OMTFrameType.Metadata)
