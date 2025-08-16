@@ -23,7 +23,7 @@ This is in contrast to the often used Big-Endian network order.
 
 All data is encapsulated into a frame consisting of the following parts:
 
-### HEADER (12 bytes)
+### HEADER (16 bytes)
 
 BYTE Version // Must be 1
 
