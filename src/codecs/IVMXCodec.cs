@@ -38,6 +38,7 @@ namespace libomtnet.codecs
         IntPtr VMX_Create(OMTSize dimensions, VMXProfile profile, VMXColorSpace colorSpace);
         void VMX_Destroy(IntPtr instance);
         void VMX_SetQuality(IntPtr instance, int q);
+        int VMX_GetQuality(IntPtr instance);
         void VMX_SetThreads(IntPtr instance, int t);
         int VMX_GetThreads(IntPtr instance);
         int VMX_LoadFrom(IntPtr instance, byte[] data, int dataLen);

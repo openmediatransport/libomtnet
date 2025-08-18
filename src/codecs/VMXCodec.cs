@@ -179,5 +179,10 @@ namespace libomtnet.codecs
         {
            VMXUnmanaged.VMX_SetThreads(instance, t);
         }
+
+        public int VMX_GetQuality(IntPtr instance)
+        {
+            return VMXUnmanaged.VMX_GetQuality(instance);
+        }
     }
 }

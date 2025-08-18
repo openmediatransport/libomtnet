@@ -450,6 +450,17 @@ namespace libomtnet
 
         }
 
+        /// <summary>
+        /// Sets the video encoding quality from the next frame. If set to Default will defer to the suggested quality amongst receivers. See OMTQuality for more details.
+        /// </summary>
+        public OMTQuality Quality { get { return quality; } set { 
+                quality = value; 
+                if (quality != OMTQuality.Default)
+                {
+                    suggestedQuality = quality;
+                }
+            } }
+
         internal override void OnTallyChanged(OMTTally tally)
         {
             SendMetadata(OMTMetadata.FromTally(tally),null);
@@ -512,8 +523,10 @@ namespace libomtnet
             }
             else if (codec.Width != width || codec.Height != height || codec.Profile != prof || codec.ColorSpace != colorSpace || codec.FramesPerSecond != framesPerSecond)
             {
+                int lastQuality = codec.GetQuality();
                 codec.Dispose();
                 codec = new OMTVMX1Codec(width, height, framesPerSecond, prof, colorSpace);
+                codec.SetQuality(lastQuality); //Preserve the last quality in cases of profile change, so there isn't a temporarily drop in quality.
             }
         }
 

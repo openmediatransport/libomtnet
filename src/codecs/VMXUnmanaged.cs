@@ -40,6 +40,8 @@ namespace libomtnet.codecs
         [DllImport(DLLPATH)]
         internal static extern void VMX_SetQuality(IntPtr instance, int q);
         [DllImport(DLLPATH)]
+        internal static extern int VMX_GetQuality(IntPtr instance);
+        [DllImport(DLLPATH)]
         internal static extern void VMX_SetThreads(IntPtr instance, int t);
         [DllImport(DLLPATH)]
         internal static extern int VMX_GetThreads(IntPtr instance);

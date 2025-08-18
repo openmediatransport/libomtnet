@@ -122,6 +122,12 @@ namespace libomtnet.codecs
         {
             codec.VMX_SetQuality(this.instance, quality);
         }
+
+        public int GetQuality()
+        {
+            return codec.VMX_GetQuality(this.instance);
+        }
+
         public int Encode(VMXImageType itype, IntPtr src, int srcStride, byte[] dst, bool interlaced)
         {
             int i = 0;
