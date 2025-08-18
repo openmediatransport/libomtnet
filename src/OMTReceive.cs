@@ -328,7 +328,7 @@ namespace libomtnet
         private void BeginConnect()
         {
             if (lastBeginConnect > DateTime.Now.AddSeconds(-1)) return;
-            lastBeginConnect = DateTime.Now;            
+            lastBeginConnect = DateTime.Now;      
             if (discovery != null)
             {
                 OMTAddress address = discovery.FindByFullNameOrUrl(GetActualAddress());
@@ -389,6 +389,10 @@ namespace libomtnet
             cs.socket = new Socket(AddressFamily.InterNetworkV6, SocketType.Stream, ProtocolType.Tcp);
             cs.socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
             cs.result = cs.socket.BeginConnect(ips, port, ConnectionCompleted, cs);
+            if (cs.result.CompletedSynchronously)
+            {
+                return null;
+            }
             return cs;
         }
 
