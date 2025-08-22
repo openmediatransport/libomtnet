@@ -217,6 +217,13 @@ namespace libomtnet
                     }
                 } else
                 {
+                    bool newPort = false;
+                    if (entry.Address.Port != port)
+                    {
+                        entry.Address.Port = port;
+                        newPort = true;
+                        OMTLogging.Write("ChangePort: " + fullName + ":" + port, "OMTDiscovery");
+                    }
                     if (addresses != null)
                     {
                         bool newIp = false;
@@ -228,7 +235,7 @@ namespace libomtnet
                                 newIp = true;
                             }
                         }
-                        if (newIp)
+                        if (newIp || newPort)
                         {
                             OnNewAddress(entry.Address);
                         }

@@ -35,7 +35,7 @@ namespace libomtnet
     {
         private string name;
         private readonly string machineName;
-        private readonly int port;
+        private int port;
         private IPAddress[] addresses = { };
         private const int MAX_FULLNAME_LENGTH = 63;
         internal bool removed = false;
@@ -191,7 +191,7 @@ namespace libomtnet
         public string MachineName { get { return machineName; } }
         public string Name { get { return name; } }
         public IPAddress[] Addresses { get { return addresses; } }
-        public int Port { get { return port; } }
+        public int Port { get { return port; } set { port = value; } }
 
         public override string ToString()
         {

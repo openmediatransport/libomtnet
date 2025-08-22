@@ -149,7 +149,7 @@ namespace libomtnet.mac
                     OMTLogging.Write("DeRegisterAddress: " + address.ToString(), "OMTDiscoveryDnsSd");
                     if (GetRegisteredEntryCount() == 0)
                     {
-                        StopRefreshTimer();
+                        //StopRefreshTimer();
                     }
                     return true;
                 }
@@ -189,7 +189,7 @@ namespace libomtnet.mac
                         sd.ChangeStatus(OMTDiscoveryEntryStatus.Registered);
                         AddEntry(sd);
                         OMTLogging.Write("RegisterAddress: " + address.ToString(), "OMTDiscoveryDnsSd");
-                        StartRefreshTimer();
+                        //StartRefreshTimer(); //No longer required since moving to QM requests on Win32
                     }
                     else
                     {
@@ -259,7 +259,7 @@ namespace libomtnet.mac
         protected override void DisposeInternal()
         {
             EndDnsBrowse();
-            StopRefreshTimer();
+            //StopRefreshTimer();
             base.DisposeInternal();
         }
 

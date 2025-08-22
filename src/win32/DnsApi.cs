@@ -184,6 +184,43 @@ namespace libomtnet.win32
 
         [DllImport("dnsapi.dll")]
         public static extern int DnsServiceDeRegister(ref PDNS_SERVICE_REGISTER_REQUEST pRequest,  IntPtr pCancel);
+
+        //MDNS API
+        [DllImport("dnsapi.dll")]
+        public static extern int DnsStartMulticastQuery(ref PMDNS_QUERY_REQUEST pRequest, IntPtr pHandle);
+
+        [DllImport("dnsapi.dll")]
+        public static extern int DnsStopMulticastQuery(IntPtr pHandle);
+
+        [UnmanagedFunctionPointer(CallingConvention.Winapi)]
+        public delegate void MdnsQueryCallback(IntPtr pQueryContext, IntPtr pQueryHandle, ref PMDNS_QUERY_RESULT pQueryResults);
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        public struct PMDNS_QUERY_REQUEST
+        {
+            public uint Version;
+            public uint ulRefCount;
+            [MarshalAs(UnmanagedType.LPWStr)]
+            public string Query;
+            public UInt16 QueryType;
+            public UInt64 QueryOptions;
+            public UInt32 InterfaceIndex;
+            public IntPtr pQueryCallback;
+            public IntPtr pQueryContext;
+            public UInt32 fAnswerReceived;
+            public UInt32 ulResendCount;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct PMDNS_QUERY_RESULT
+        {
+            public uint Version;
+            public int QueryStatus;
+            public UInt64 QueryOptions;
+            public IntPtr pQueryRecords;
+            public IntPtr pReserved;
+        }
+
     }
 
 }

@@ -28,6 +28,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
 using System.Net;
+using libomtnet.src.mdns;
 
 namespace libomtnet.win32
 {
@@ -41,13 +42,20 @@ namespace libomtnet.win32
     ///    Workaround: We track the Ttl and remove from list once finally drops to 0.
     /// 4. The API will not always notify in time for the Ttl (or at all) even if the source is still live. 
     ///    Workaround: A Ttl < 60 seems a reliable indicator we can expire the item.
+    /// 5. The default DnsServiceBrowse implementation uses unicast (QU) requests which will result in missing sources on some systems since many apps listen on port 5353 at the same time.
+    ///    Workaround: Use DnsStartMulticastQuery instead which uses (QM)
     /// </summary>
     internal class OMTDiscoveryWin32 : OMTDiscovery
     {       
 
         private DnsApi.DnsServiceRegisterComplete registerCallback;
-        private DnsApi.DnsServiceBrowseCallback browseCallback;
-        private DnsApi.PDNS_SERVICE_CANCEL browseCancel;
+        //private DnsApi.DnsServiceBrowseCallback browseCallback;
+        //private DnsApi.PDNS_SERVICE_CANCEL browseCancel;
+
+        private DnsApi.MdnsQueryCallback mdnsQueryCallback;
+        private IntPtr mdnsQueryHandle;
+
+        private MDNSClient mdnsClient;
 
         private class EntryWin32 : OMTDiscoveryEntry
         {
@@ -87,37 +95,85 @@ namespace libomtnet.win32
 
         internal OMTDiscoveryWin32()
         {
-            browseCallback = new DnsApi.DnsServiceBrowseCallback(OnBrowse);
+            //browseCallback = new DnsApi.DnsServiceBrowseCallback(OnBrowse);
             registerCallback = new DnsApi.DnsServiceRegisterComplete(OnComplete);
+            mdnsQueryCallback = new DnsApi.MdnsQueryCallback(OnMDNSBrowse);
             BeginDNSBrowse();
+            BeginDNSClient();
         }
 
+        internal void BeginDNSClient()
+        {
+            try
+            {
+                mdnsClient = new MDNSClient("_omt._tcp.local");
+            }
+            catch (Exception ex)
+            {
+                OMTLogging.Write(ex.ToString(), "OMTDiscoveryWin32");
+            }
+        }
+        internal void EndDNSClient()
+        {
+            if (mdnsClient != null)
+            {
+                mdnsClient.Dispose();
+                mdnsClient = null;
+            }
+        }
         internal void BeginDNSBrowse()
-        {            
-            DnsApi.PDNS_SERVICE_BROWSE_REQUEST request = new DnsApi.PDNS_SERVICE_BROWSE_REQUEST();
+        {
+            //DnsApi.PDNS_SERVICE_BROWSE_REQUEST request = new DnsApi.PDNS_SERVICE_BROWSE_REQUEST();
+            //request.InterfaceIndex = 0;
+            //request.Version = DnsApi.DNS_QUERY_REQUEST_VERSION1;
+            //request.QueryName = "_omt._tcp.local";
+            //request.pBrowseCallback = Marshal.GetFunctionPointerForDelegate(browseCallback);
+
+            //browseCancel = new DnsApi.PDNS_SERVICE_CANCEL();
+            //int hr = DnsApi.DnsServiceBrowse(ref request, ref browseCancel);
+            //if (hr == DnsApi.DNS_REQUEST_PENDING)
+            //{
+            //    OMTLogging.Write("BeginDNSBrowse.OK", "OMTDiscoveryWin32");
+            //}
+            //else
+            //{
+            //    OMTLogging.Write("BeginDNSBrowse.Error: " + hr, "OMTDiscoveryWin32");
+            //}
+
+            DnsApi.PMDNS_QUERY_REQUEST request = new DnsApi.PMDNS_QUERY_REQUEST();
             request.InterfaceIndex = 0;
             request.Version = DnsApi.DNS_QUERY_REQUEST_VERSION1;
-            request.QueryName = "_omt._tcp.local";
-            request.pBrowseCallback = Marshal.GetFunctionPointerForDelegate(browseCallback);
-            
-            browseCancel = new DnsApi.PDNS_SERVICE_CANCEL();
-            int hr = DnsApi.DnsServiceBrowse(ref request, ref browseCancel);
-            if (hr == DnsApi.DNS_REQUEST_PENDING)
+            request.Query = "_omt._tcp.local";
+            request.QueryType = (ushort)DnsApi.DNS_TYPE.DNS_TYPE_PTR;
+            request.pQueryCallback = Marshal.GetFunctionPointerForDelegate(mdnsQueryCallback);
+            mdnsQueryHandle = Marshal.AllocHGlobal(1024);
+            int hr = DnsApi.DnsStartMulticastQuery(ref request, mdnsQueryHandle);
+            if (hr == 0)
             {
                 OMTLogging.Write("BeginDNSBrowse.OK", "OMTDiscoveryWin32");
             }
             else
             {
                 OMTLogging.Write("BeginDNSBrowse.Error: " + hr, "OMTDiscoveryWin32");
+                Marshal.FreeHGlobal(mdnsQueryHandle);
+                mdnsQueryHandle = IntPtr.Zero;
             }
+
         }
 
         internal void EndDnsBrowse()
         {
-            if (browseCancel.reserved != null)
+            //if (browseCancel.reserved != null)
+            //{
+            //    DnsApi.DnsServiceBrowseCancel(ref browseCancel);
+            //    browseCancel.reserved = IntPtr.Zero;
+            //    OMTLogging.Write("EndDNSBrowse", "OMTDiscoveryWin32");
+            //}
+            if (mdnsQueryHandle != IntPtr.Zero)
             {
-                DnsApi.DnsServiceBrowseCancel(ref browseCancel);
-                browseCancel.reserved = IntPtr.Zero;
+                DnsApi.DnsStopMulticastQuery(mdnsQueryHandle);
+                Marshal.FreeHGlobal(mdnsQueryHandle);
+                mdnsQueryHandle = IntPtr.Zero;
                 OMTLogging.Write("EndDNSBrowse", "OMTDiscoveryWin32");
             }
         }
@@ -261,6 +317,7 @@ namespace libomtnet.win32
         }
         protected override void DisposeInternal()
         {
+            EndDNSClient();
             EndDnsBrowse();
             base.DisposeInternal();
         }
@@ -340,7 +397,8 @@ namespace libomtnet.win32
                 OMTLogging.Write(ex.ToString(), "OMTDiscoveryWin32");
             }
         }
-        void OnBrowse(uint status, IntPtr pQueryContext, IntPtr pDnsRecord)
+
+        void ProcessDnsRecord(IntPtr pDnsRecord)
         {
             if (pDnsRecord != null)
             {
@@ -408,9 +466,10 @@ namespace libomtnet.win32
                         if (dwTtl == 0)
                         {
                             RemoveDiscoveredEntry(addressName);
-                        } else
+                        }
+                        else
                         {
-                           OMTDiscoveryEntry entry = UpdateDiscoveredEntry(addressName, addressPort, addresses.ToArray());
+                            OMTDiscoveryEntry entry = UpdateDiscoveredEntry(addressName, addressPort, addresses.ToArray());
                             if (entry != null)
                             {
                                 if (dwTtl < 60)
@@ -421,7 +480,7 @@ namespace libomtnet.win32
                                 {
                                     entry.Expiry = DateTime.MinValue;
                                 }
-                            } 
+                            }
                         }
                     }
                     DnsApi.DnsFree(pDnsRecord, DnsApi.DNS_FREE_TYPE.DnsFreeRecordList);
@@ -432,6 +491,15 @@ namespace libomtnet.win32
                     OMTLogging.Write(ex.ToString(), "OMTDiscoveryWin32");
                 }
             }
+        }
+        void OnBrowse(uint status, IntPtr pQueryContext, IntPtr pDnsRecord)
+        {
+            ProcessDnsRecord(pDnsRecord);
+        }
+
+        void OnMDNSBrowse(IntPtr pQueryContext, IntPtr pQueryHandle, ref DnsApi.PMDNS_QUERY_RESULT pQueryResults)
+        {
+            ProcessDnsRecord(pQueryResults.pQueryRecords);
         }
     }
 }
