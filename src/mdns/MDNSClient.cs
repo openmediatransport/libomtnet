@@ -132,11 +132,13 @@ namespace libomtnet.src.mdns
                 if (af == AddressFamily.InterNetworkV6)
                 {
                     socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.MulticastInterface, interfaceIndex);
+                    socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.MulticastLoopback, false);
                     socket.Bind(new IPEndPoint(IPAddress.IPv6Any, DEFAULT_PORT));
                 }
                 else
                 {
                     socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastInterface, IPAddress.HostToNetworkOrder(interfaceIndex));
+                    socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastLoopback, false);
                     socket.Bind(new IPEndPoint(IPAddress.Any, DEFAULT_PORT));
                 }
                 return socket;
@@ -166,23 +168,36 @@ namespace libomtnet.src.mdns
 
         private void RefreshTimerCallback(object state)
         {
-            if (Exiting) return;
-            lock (lockSync)
+            try
             {
-                if (sockets != null)
+                if (Exiting) return;
+                lock (lockSync)
                 {
-                    foreach (Socket s in sockets)
+                    if (sockets != null)
                     {
-                        try
+                        foreach (Socket s in sockets)
                         {
-                            SendQueryToSocket(s);
-                        }
-                        catch (Exception ex)
-                        {
-                            OMTLogging.Write(ex.ToString(), "MDNSClient");
+                            try
+                            {
+                                SendQueryToSocket(s);
+                            }
+                            catch (Exception ex)
+                            {
+                                OMTLogging.Write(ex.ToString(), "MDNSClient"); 
+                                List<Socket> list = new List<Socket>();
+                                list.AddRange(sockets);
+                                list.Remove(s);
+                                sockets = list.ToArray();
+                                OMTLogging.Write("Removed failed socket", "MDNSClient");
+                                break;
+                            }
                         }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                OMTLogging.Write(ex.ToString(), "MDNSClient");
             }
         }
 
