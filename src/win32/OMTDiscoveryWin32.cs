@@ -49,11 +49,11 @@ namespace libomtnet.win32
     {       
 
         private DnsApi.DnsServiceRegisterComplete registerCallback;
-        //private DnsApi.DnsServiceBrowseCallback browseCallback;
-        //private DnsApi.PDNS_SERVICE_CANCEL browseCancel;
+        private DnsApi.DnsServiceBrowseCallback browseCallback;
+        private DnsApi.PDNS_SERVICE_CANCEL browseCancel;
 
-        private DnsApi.MdnsQueryCallback mdnsQueryCallback;
-        private IntPtr mdnsQueryHandle;
+        //private DnsApi.MdnsQueryCallback mdnsQueryCallback;
+        //private IntPtr mdnsQueryHandle;
 
         private MDNSClient mdnsClient;
 
@@ -95,9 +95,9 @@ namespace libomtnet.win32
 
         internal OMTDiscoveryWin32()
         {
-            //browseCallback = new DnsApi.DnsServiceBrowseCallback(OnBrowse);
+            browseCallback = new DnsApi.DnsServiceBrowseCallback(OnBrowse);
             registerCallback = new DnsApi.DnsServiceRegisterComplete(OnComplete);
-            mdnsQueryCallback = new DnsApi.MdnsQueryCallback(OnMDNSBrowse);
+            //mdnsQueryCallback = new DnsApi.MdnsQueryCallback(OnMDNSBrowse);
             BeginDNSBrowse();
             BeginDNSClient();
         }
@@ -123,59 +123,59 @@ namespace libomtnet.win32
         }
         internal void BeginDNSBrowse()
         {
-            //DnsApi.PDNS_SERVICE_BROWSE_REQUEST request = new DnsApi.PDNS_SERVICE_BROWSE_REQUEST();
-            //request.InterfaceIndex = 0;
-            //request.Version = DnsApi.DNS_QUERY_REQUEST_VERSION1;
-            //request.QueryName = "_omt._tcp.local";
-            //request.pBrowseCallback = Marshal.GetFunctionPointerForDelegate(browseCallback);
-
-            //browseCancel = new DnsApi.PDNS_SERVICE_CANCEL();
-            //int hr = DnsApi.DnsServiceBrowse(ref request, ref browseCancel);
-            //if (hr == DnsApi.DNS_REQUEST_PENDING)
-            //{
-            //    OMTLogging.Write("BeginDNSBrowse.OK", "OMTDiscoveryWin32");
-            //}
-            //else
-            //{
-            //    OMTLogging.Write("BeginDNSBrowse.Error: " + hr, "OMTDiscoveryWin32");
-            //}
-
-            DnsApi.PMDNS_QUERY_REQUEST request = new DnsApi.PMDNS_QUERY_REQUEST();
+            DnsApi.PDNS_SERVICE_BROWSE_REQUEST request = new DnsApi.PDNS_SERVICE_BROWSE_REQUEST();
             request.InterfaceIndex = 0;
             request.Version = DnsApi.DNS_QUERY_REQUEST_VERSION1;
-            request.Query = "_omt._tcp.local";
-            request.QueryType = (ushort)DnsApi.DNS_TYPE.DNS_TYPE_PTR;
-            request.pQueryCallback = Marshal.GetFunctionPointerForDelegate(mdnsQueryCallback);
-            mdnsQueryHandle = Marshal.AllocHGlobal(1024);
-            int hr = DnsApi.DnsStartMulticastQuery(ref request, mdnsQueryHandle);
-            if (hr == 0)
+            request.QueryName = "_omt._tcp.local";
+            request.pBrowseCallback = Marshal.GetFunctionPointerForDelegate(browseCallback);
+
+            browseCancel = new DnsApi.PDNS_SERVICE_CANCEL();
+            int hr = DnsApi.DnsServiceBrowse(ref request, ref browseCancel);
+            if (hr == DnsApi.DNS_REQUEST_PENDING)
             {
                 OMTLogging.Write("BeginDNSBrowse.OK", "OMTDiscoveryWin32");
             }
             else
             {
                 OMTLogging.Write("BeginDNSBrowse.Error: " + hr, "OMTDiscoveryWin32");
-                Marshal.FreeHGlobal(mdnsQueryHandle);
-                mdnsQueryHandle = IntPtr.Zero;
             }
+
+            //DnsApi.PMDNS_QUERY_REQUEST request = new DnsApi.PMDNS_QUERY_REQUEST();
+            //request.InterfaceIndex = 0;
+            //request.Version = DnsApi.DNS_QUERY_REQUEST_VERSION1;
+            //request.Query = "_omt._tcp.local";
+            //request.QueryType = (ushort)DnsApi.DNS_TYPE.DNS_TYPE_PTR;
+            //request.pQueryCallback = Marshal.GetFunctionPointerForDelegate(mdnsQueryCallback);
+            //mdnsQueryHandle = Marshal.AllocHGlobal(1024);
+            //int hr = DnsApi.DnsStartMulticastQuery(ref request, mdnsQueryHandle);
+            //if (hr == 0)
+            //{
+            //    OMTLogging.Write("BeginDNSBrowse.OK", "OMTDiscoveryWin32");
+            //}
+            //else
+            //{
+            //    OMTLogging.Write("BeginDNSBrowse.Error: " + hr, "OMTDiscoveryWin32");
+            //    Marshal.FreeHGlobal(mdnsQueryHandle);
+            //    mdnsQueryHandle = IntPtr.Zero;
+            //}
 
         }
 
         internal void EndDnsBrowse()
         {
-            //if (browseCancel.reserved != null)
-            //{
-            //    DnsApi.DnsServiceBrowseCancel(ref browseCancel);
-            //    browseCancel.reserved = IntPtr.Zero;
-            //    OMTLogging.Write("EndDNSBrowse", "OMTDiscoveryWin32");
-            //}
-            if (mdnsQueryHandle != IntPtr.Zero)
+            if (browseCancel.reserved != null)
             {
-                DnsApi.DnsStopMulticastQuery(mdnsQueryHandle);
-                Marshal.FreeHGlobal(mdnsQueryHandle);
-                mdnsQueryHandle = IntPtr.Zero;
+                DnsApi.DnsServiceBrowseCancel(ref browseCancel);
+                browseCancel.reserved = IntPtr.Zero;
                 OMTLogging.Write("EndDNSBrowse", "OMTDiscoveryWin32");
             }
+            //if (mdnsQueryHandle != IntPtr.Zero)
+            //{
+            //    DnsApi.DnsStopMulticastQuery(mdnsQueryHandle);
+            //    Marshal.FreeHGlobal(mdnsQueryHandle);
+            //    mdnsQueryHandle = IntPtr.Zero;
+            //    OMTLogging.Write("EndDNSBrowse", "OMTDiscoveryWin32");
+            //}
         }
 
         private DnsApi.PDNS_SERVICE_REGISTER_REQUEST CreateRegisterRequest(string name, string machineName, int port)
@@ -497,9 +497,9 @@ namespace libomtnet.win32
             ProcessDnsRecord(pDnsRecord);
         }
 
-        void OnMDNSBrowse(IntPtr pQueryContext, IntPtr pQueryHandle, ref DnsApi.PMDNS_QUERY_RESULT pQueryResults)
-        {
-            ProcessDnsRecord(pQueryResults.pQueryRecords);
-        }
+        //void OnMDNSBrowse(IntPtr pQueryContext, IntPtr pQueryHandle, ref DnsApi.PMDNS_QUERY_RESULT pQueryResults)
+        //{
+        //    ProcessDnsRecord(pQueryResults.pQueryRecords);
+        //}
     }
 }
