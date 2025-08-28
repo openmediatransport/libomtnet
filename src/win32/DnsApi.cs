@@ -162,17 +162,76 @@ namespace libomtnet.win32
             DnsFreeParsedMessageFields
         }
 
+
+        public class DnsCancelHandle : SafeHandle
+        {
+            private bool registerType;
+            public DnsCancelHandle(bool registerType) : base(IntPtr.Zero, true)
+            {
+                this.registerType = registerType;
+                this.handle = Marshal.AllocHGlobal(8);
+            }
+            public override bool IsInvalid
+            {
+                get
+                {
+                    if (handle == IntPtr.Zero)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+            }
+            internal IntPtr GetInternalValue()
+            {
+                if (handle != IntPtr.Zero)
+                {
+                    return Marshal.ReadIntPtr(handle);
+                }
+                return IntPtr.Zero;
+            }
+
+            public void Clear()
+            {
+                if (handle != IntPtr.Zero)
+                {
+                    Marshal.FreeHGlobal(handle);
+                    handle = IntPtr.Zero;
+                }
+            }
+            protected override bool ReleaseHandle()
+            {
+                if (handle != IntPtr.Zero)
+                {
+                    if (registerType)
+                    {
+                        DnsServiceRegisterCancel(handle);
+                    }
+                    else
+                    {
+                        DnsServiceBrowseCancel(handle);
+                    }
+                    Marshal.FreeHGlobal(handle);
+                    handle = IntPtr.Zero;
+                }
+                return true;
+            }
+        }
+
         [UnmanagedFunctionPointer(CallingConvention.Winapi)]
         public delegate void DnsServiceBrowseCallback(uint status, IntPtr pQueryContext, IntPtr pDnsRecord);
 
         [DllImport("dnsapi.dll", CharSet = CharSet.Unicode)]
-        public static extern int DnsServiceBrowse(ref PDNS_SERVICE_BROWSE_REQUEST pRequest, ref PDNS_SERVICE_CANCEL pCancel);
+        public static extern int DnsServiceBrowse(ref PDNS_SERVICE_BROWSE_REQUEST pRequest, DnsCancelHandle pCancel);
 
         [DllImport("dnsapi.dll")]
-        public static extern int DnsServiceBrowseCancel(ref PDNS_SERVICE_CANCEL pCancel);
+        private static extern int DnsServiceBrowseCancel(IntPtr pCancel);
 
         [DllImport("dnsapi.dll")]
-        public static extern int DnsServiceRegisterCancel(ref PDNS_SERVICE_CANCEL pCancel);
+        private static extern int DnsServiceRegisterCancel(IntPtr pCancel);
 
         [DllImport("dnsapi.dll")]
         public static extern void DnsFree(IntPtr pData, DNS_FREE_TYPE FreeType);
@@ -180,7 +239,7 @@ namespace libomtnet.win32
         public static extern void DnsServiceFreeInstance(IntPtr pInstance);
 
         [DllImport("dnsapi.dll")]
-        public static extern int DnsServiceRegister(ref PDNS_SERVICE_REGISTER_REQUEST pRequest,  ref PDNS_SERVICE_CANCEL pCancel);
+        public static extern int DnsServiceRegister(ref PDNS_SERVICE_REGISTER_REQUEST pRequest, DnsCancelHandle pCancel);
 
         [DllImport("dnsapi.dll")]
         public static extern int DnsServiceDeRegister(ref PDNS_SERVICE_REGISTER_REQUEST pRequest,  IntPtr pCancel);

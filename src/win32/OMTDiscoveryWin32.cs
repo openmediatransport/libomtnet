@@ -50,7 +50,7 @@ namespace libomtnet.win32
 
         private DnsApi.DnsServiceRegisterComplete registerCallback;
         private DnsApi.DnsServiceBrowseCallback browseCallback;
-        private DnsApi.PDNS_SERVICE_CANCEL browseCancel;
+        private DnsApi.DnsCancelHandle browseCancel = null;
 
         //private DnsApi.MdnsQueryCallback mdnsQueryCallback;
         //private IntPtr mdnsQueryHandle;
@@ -60,7 +60,7 @@ namespace libomtnet.win32
         private class EntryWin32 : OMTDiscoveryEntry
         {
             public DnsApi.PDNS_SERVICE_REGISTER_REQUEST RegisterRequest;
-            public DnsApi.PDNS_SERVICE_CANCEL RegisterCancel;
+            public DnsApi.DnsCancelHandle RegisterCancel = null;
             public bool Cancelling = false;
             public EntryWin32(OMTAddress address) : base(address)
             {
@@ -70,11 +70,11 @@ namespace libomtnet.win32
             {
                 if (Cancelling == false)
                 {
-                    if (RegisterCancel.reserved != IntPtr.Zero)
+                    if (RegisterCancel != null)
                     {
                         Cancelling = true;
-                        DnsApi.DnsServiceRegisterCancel(ref RegisterCancel);
-                        RegisterCancel.reserved = IntPtr.Zero;
+                        RegisterCancel.Close();
+                        RegisterCancel = null;
                         Cancelling = false;
                         Debug.WriteLine("CancelRegister");
                     }
@@ -100,6 +100,19 @@ namespace libomtnet.win32
             //mdnsQueryCallback = new DnsApi.MdnsQueryCallback(OnMDNSBrowse);
             BeginDNSBrowse();
             BeginDNSClient();
+            AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
+        }
+
+        private void CurrentDomain_ProcessExit(object sender, EventArgs e)
+        {
+            try
+            {
+                DisposeInternal();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.ToString());
+            }
         }
 
         internal void BeginDNSClient()
@@ -129,8 +142,8 @@ namespace libomtnet.win32
             request.QueryName = "_omt._tcp.local";
             request.pBrowseCallback = Marshal.GetFunctionPointerForDelegate(browseCallback);
 
-            browseCancel = new DnsApi.PDNS_SERVICE_CANCEL();
-            int hr = DnsApi.DnsServiceBrowse(ref request, ref browseCancel);
+            browseCancel = new DnsApi.DnsCancelHandle(false);
+            int hr = DnsApi.DnsServiceBrowse(ref request, browseCancel);
             if (hr == DnsApi.DNS_REQUEST_PENDING)
             {
                 OMTLogging.Write("BeginDNSBrowse.OK", "OMTDiscoveryWin32");
@@ -163,10 +176,10 @@ namespace libomtnet.win32
 
         internal void EndDnsBrowse()
         {
-            if (browseCancel.reserved != null)
+            if (browseCancel != null)
             {
-                DnsApi.DnsServiceBrowseCancel(ref browseCancel);
-                browseCancel.reserved = IntPtr.Zero;
+                browseCancel.Close();
+                browseCancel = null;
                 OMTLogging.Write("EndDNSBrowse", "OMTDiscoveryWin32");
             }
             //if (mdnsQueryHandle != IntPtr.Zero)
@@ -298,7 +311,8 @@ namespace libomtnet.win32
                     EntryWin32 q = new EntryWin32(address);
                     q.RegisterRequest = request;
                     q.RegisterRequest.pQueryContext = q.ToIntPtr();
-                    int hr = DnsApi.DnsServiceRegister(ref q.RegisterRequest, ref q.RegisterCancel);
+                    q.RegisterCancel = new DnsApi.DnsCancelHandle(true);
+                    int hr = DnsApi.DnsServiceRegister(ref q.RegisterRequest, q.RegisterCancel);
                     if (hr == DnsApi.DNS_REQUEST_PENDING)
                     {
                         q.ChangeStatus(OMTDiscoveryEntryStatus.PendingRegister);
@@ -317,6 +331,7 @@ namespace libomtnet.win32
         }
         protected override void DisposeInternal()
         {
+            AppDomain.CurrentDomain.ProcessExit -= CurrentDomain_ProcessExit;
             EndDNSClient();
             EndDnsBrowse();
             base.DisposeInternal();
@@ -326,6 +341,7 @@ namespace libomtnet.win32
         {
             try
             {
+                if (status == DnsApi.ERROR_CANCELLED) return;
                 if (pQueryContext != IntPtr.Zero)
                 {
                     EntryWin32 q = (EntryWin32)OMTDiscoveryEntry.FromIntPtr(pQueryContext);
@@ -357,8 +373,11 @@ namespace libomtnet.win32
                             {
                                 if (status == 0)
                                 {
-                                    q.ChangeStatus(OMTDiscoveryEntryStatus.Registered);
-                                    q.RegisterCancel.reserved = IntPtr.Zero;
+                                    if (q.RegisterCancel != null)
+                                    {
+                                        q.RegisterCancel.Clear();
+                                        q.RegisterCancel = null;
+                                    } 
                                     if (instance != IntPtr.Zero)
                                     {
                                         DnsApi.PDNS_SERVICE_INSTANCE i = (DnsApi.PDNS_SERVICE_INSTANCE)Marshal.PtrToStructure(instance, typeof(DnsApi.PDNS_SERVICE_INSTANCE));
@@ -374,6 +393,7 @@ namespace libomtnet.win32
                                         DeRegisterAddressFromContext(q);
                                     } else
                                     {
+                                        q.ChangeStatus(OMTDiscoveryEntryStatus.Registered);
                                         OMTLogging.Write("Register.Complete: " + q.Address.ToString() + ":" + q.Address.Port, "OMTDiscoveryWin32");
                                     }
                                 }
