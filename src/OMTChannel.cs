@@ -83,6 +83,17 @@ namespace libomtnet
             }
             tempReceiveBuffer = new OMTBuffer(OMTConstants.VIDEO_MIN_SIZE, true);
 
+            try
+            {
+                socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
+                socket.SetSocketOption(SocketOptionLevel.Tcp, (SocketOptionName)3, (int)5); //TCP_KEEPIDLE=3 in Win32 and is translated in .NET8+ to platform specific values
+                OMTLogging.Write("KeepAlive.Enabled", "OMTChannel");
+            }
+            catch (Exception ex)
+            {
+                OMTLogging.Write(ex.ToString(), "OMTChannel.KeepAlive");
+            }
+
             receiveargs = new SocketAsyncEventArgs();
             receiveargs.Completed += Receive_Completed;
 
