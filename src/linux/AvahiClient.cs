@@ -38,10 +38,14 @@ namespace libomtnet.linux
         public const int AVAHI_PROTO_INET6 = 1;
         public const int AVAHI_IF_UNSPEC = -1;
 
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void AvahiClientCallback(IntPtr s, int state, IntPtr userData);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void AvahiServiceBrowserCallback(IntPtr b, int iface, int protocol, AvahiBrowserEvent evt, IntPtr name, IntPtr type, IntPtr domain, int flags, IntPtr userData);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void AvahiServiceResolverCallback(IntPtr r, int iface, int protocol, AvahiResolverEvent evt, IntPtr name, IntPtr type, IntPtr domain,
             IntPtr host_name, IntPtr a, UInt16 port, IntPtr txt, int flags, IntPtr userData);
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void AvahiEntryGroupCallback(IntPtr group, int state, IntPtr userData);
 
         public enum AvahiBrowserEvent
@@ -59,48 +63,48 @@ namespace libomtnet.linux
             AVAHI_RESOLVER_FAILURE
         }
 
-        [DllImport(DLL_PATH_COMMON)]
+        [DllImport(DLL_PATH_COMMON, CallingConvention = CallingConvention.Cdecl)]
         public static extern IntPtr avahi_simple_poll_new();
 
-        [DllImport(DLL_PATH_COMMON)]
+        [DllImport(DLL_PATH_COMMON, CallingConvention = CallingConvention.Cdecl)]
         public static extern void avahi_simple_poll_free(IntPtr sp);
 
-        [DllImport(DLL_PATH_COMMON)]
+        [DllImport(DLL_PATH_COMMON, CallingConvention = CallingConvention.Cdecl)]
         public static extern void avahi_simple_poll_quit(IntPtr sp);
 
-        [DllImport(DLL_PATH_COMMON)]
+        [DllImport(DLL_PATH_COMMON, CallingConvention = CallingConvention.Cdecl)]
         public static extern IntPtr avahi_simple_poll_get(IntPtr s);
 
-        [DllImport(DLL_PATH_COMMON)]
+        [DllImport(DLL_PATH_COMMON, CallingConvention = CallingConvention.Cdecl)]
         public static extern int avahi_simple_poll_iterate(IntPtr sp, int sleepTime);
 
-        [DllImport(DLL_PATH_CLIENT)]
+        [DllImport(DLL_PATH_CLIENT, CallingConvention = CallingConvention.Cdecl)]
         public static extern IntPtr avahi_client_new(IntPtr poll, int flags, IntPtr callback, IntPtr userdata, ref int error);
-        [DllImport(DLL_PATH_CLIENT)]
+        [DllImport(DLL_PATH_CLIENT, CallingConvention = CallingConvention.Cdecl)]
         public static extern IntPtr avahi_service_browser_new(IntPtr client, int iface, int protocol, IntPtr type, IntPtr domain, int flags, IntPtr callback, IntPtr userData);
 
-        [DllImport(DLL_PATH_CLIENT)]
+        [DllImport(DLL_PATH_CLIENT, CallingConvention = CallingConvention.Cdecl)]
         public static extern void avahi_client_free(IntPtr client);
 
-        [DllImport(DLL_PATH_CLIENT)]
+        [DllImport(DLL_PATH_CLIENT, CallingConvention = CallingConvention.Cdecl)]
         public static extern int avahi_service_browser_free(IntPtr browser);
 
-        [DllImport(DLL_PATH_CLIENT)]
+        [DllImport(DLL_PATH_CLIENT, CallingConvention = CallingConvention.Cdecl)]
         public static extern IntPtr avahi_service_resolver_new(IntPtr client, int iface, int protocol, IntPtr name, IntPtr type, IntPtr domain, int aprotocol, int flags, IntPtr callback, IntPtr userData);
 
-        [DllImport(DLL_PATH_CLIENT)]
+        [DllImport(DLL_PATH_CLIENT, CallingConvention = CallingConvention.Cdecl)]
         public static extern int avahi_service_resolver_free(IntPtr resolver);
 
-        [DllImport(DLL_PATH_CLIENT)]
+        [DllImport(DLL_PATH_CLIENT, CallingConvention = CallingConvention.Cdecl)]
         public static extern IntPtr avahi_entry_group_new(IntPtr client, IntPtr callback, IntPtr userData);
-        [DllImport(DLL_PATH_CLIENT)]
+        [DllImport(DLL_PATH_CLIENT, CallingConvention = CallingConvention.Cdecl)]
         public static extern int avahi_entry_group_free(IntPtr group);
 
-        [DllImport(DLL_PATH_CLIENT)]
+        [DllImport(DLL_PATH_CLIENT, CallingConvention = CallingConvention.Cdecl)]
         public static extern int avahi_entry_group_add_service(IntPtr group, int iface, int protocol, int flags, IntPtr name,
             IntPtr type, IntPtr domain, IntPtr host, UInt16 port, IntPtr args);
 
-        [DllImport(DLL_PATH_CLIENT)]
+        [DllImport(DLL_PATH_CLIENT, CallingConvention = CallingConvention.Cdecl)]
         public static extern int avahi_entry_group_commit(IntPtr group);
     }
 }
