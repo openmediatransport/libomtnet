@@ -34,6 +34,8 @@ namespace libomtnet
 {
     public class OMTLogging
     {
+        public delegate void LogCallbackDelegate(string line);
+
         private static FileStream logStream;
         private static StreamWriter logWriter;
         private static object lockSync = new object();
@@ -42,6 +44,7 @@ namespace libomtnet
         private static Queue<string> queue = new Queue<string>();
         private static AutoResetEvent readyEvent = new AutoResetEvent(false);
         private static bool initialized = false;
+        private static LogCallbackDelegate logCallback;
 
         static OMTLogging()
         {
@@ -107,11 +110,19 @@ namespace libomtnet
                     readyEvent.WaitOne();
                     lock (lockSync)
                     {
-                        if (logWriter != null)
+                        if (logWriter != null || logCallback != null )
                         {
                             while (queue.Count > 0)
                             {
-                                logWriter.WriteLine(queue.Dequeue());
+                                string line = queue.Dequeue();
+                                if ( logWriter != null )
+                                {
+                                    logWriter.WriteLine(line);
+                                }
+                                if (logCallback != null)
+                                {
+                                    logCallback(line);
+                                }
                             }
                         }
                     }
@@ -142,6 +153,15 @@ namespace libomtnet
                 }
             }
         }
+
+        public static void SetCallback(LogCallbackDelegate callback)
+        {
+            lock (lockSync)
+            {
+                logCallback = callback;
+            }
+        }
+
         public static void Write(string message, string source)
         {
             try
