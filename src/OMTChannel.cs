@@ -103,15 +103,15 @@ namespace libomtnet
             {
                 poolCount = OMTConstants.VIDEO_FRAME_POOL_COUNT;
                 startingFrameSize = OMTConstants.VIDEO_MIN_SIZE;
-                receiveargs.SetBuffer(new byte[OMTConstants.VIDEO_MAX_SIZE], 0, OMTConstants.VIDEO_MAX_SIZE);
+                receiveargs.SetBuffer(new byte[OMTConstants.VIDEO_MAX_SIZE], 0, OMTConstants.NETWORK_RECEIVE_MAX_TRANSFER);
             } else if (receiveFrameType == OMTFrameType.Audio) {
                 poolCount = OMTConstants.AUDIO_FRAME_POOL_COUNT;
                 startingFrameSize = OMTConstants.AUDIO_MIN_SIZE;
-                receiveargs.SetBuffer(new byte[OMTConstants.AUDIO_MAX_SIZE], 0, OMTConstants.AUDIO_MAX_SIZE);
+                receiveargs.SetBuffer(new byte[OMTConstants.AUDIO_MAX_SIZE], 0, OMTConstants.NETWORK_RECEIVE_MAX_TRANSFER);
             } else {
                 poolCount = 1;
                 startingFrameSize = OMTConstants.AUDIO_MIN_SIZE;
-                receiveargs.SetBuffer(new byte[OMTConstants.AUDIO_MAX_SIZE], 0, OMTConstants.AUDIO_MAX_SIZE);
+                receiveargs.SetBuffer(new byte[OMTConstants.AUDIO_MAX_SIZE], 0, OMTConstants.NETWORK_RECEIVE_MAX_TRANSFER);
             }
             int sendPoolCount = OMTConstants.NETWORK_ASYNC_COUNT;
             int startingSendPoolSize = OMTConstants.AUDIO_MIN_SIZE;
@@ -494,7 +494,7 @@ namespace libomtnet
                             }
                             else { break; }
                         }
-                        e.SetBuffer(len, e.Buffer.Length - len);
+                        e.SetBuffer(len, Math.Min(OMTConstants.NETWORK_RECEIVE_MAX_TRANSFER, e.Buffer.Length - len));
                         StartReceive(e);
                     }
                     else
@@ -530,7 +530,7 @@ namespace libomtnet
 
         public void StartReceive()
         {            
-            receiveargs.SetBuffer(0, receiveargs.Buffer.Length);
+            receiveargs.SetBuffer(0, OMTConstants.NETWORK_RECEIVE_MAX_TRANSFER);
             StartReceive(receiveargs);
         }
 

@@ -127,7 +127,7 @@ namespace libomtnet.mac
 
         internal void EndDnsBrowse()
         {
-            if (browseRef != null)
+            if (browseRef != IntPtr.Zero)
             {
                 processing = false;
                 DnsSd.DNSServiceRefDeallocate(browseRef);

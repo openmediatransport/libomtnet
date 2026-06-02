@@ -83,7 +83,7 @@ namespace libomtnet.win32
             protected override void DisposeInternal()
             {
                 base.DisposeInternal();
-                if (RegisterRequest.pServiceInstance != null)
+                if (RegisterRequest.pServiceInstance != IntPtr.Zero)
                 {
                     Marshal.DestroyStructure(RegisterRequest.pServiceInstance, typeof(DnsApi.PDNS_SERVICE_INSTANCE));
                     Marshal.FreeHGlobal(RegisterRequest.pServiceInstance);
@@ -381,7 +381,7 @@ namespace libomtnet.win32
                                     if (instance != IntPtr.Zero)
                                     {
                                         DnsApi.PDNS_SERVICE_INSTANCE i = (DnsApi.PDNS_SERVICE_INSTANCE)Marshal.PtrToStructure(instance, typeof(DnsApi.PDNS_SERVICE_INSTANCE));
-                                        if (q.RegisterRequest.pServiceInstance != null)
+                                        if (q.RegisterRequest.pServiceInstance != IntPtr.Zero)
                                         {                                                                                        
                                             //We need to update here as the DNS service may rename the dns name due to duplicates. We need that new name to deregister properly.
                                             Marshal.StructureToPtr(i, q.RegisterRequest.pServiceInstance, true);
@@ -420,7 +420,7 @@ namespace libomtnet.win32
 
         void ProcessDnsRecord(IntPtr pDnsRecord)
         {
-            if (pDnsRecord != null)
+            if (pDnsRecord != IntPtr.Zero)
             {
                 try
                 {

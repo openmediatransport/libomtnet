@@ -39,6 +39,10 @@ namespace libomtnet
         public static int NETWORK_SEND_RECEIVE_BUFFER = 65536;
         public static int NETWORK_RECEIVE_BUFFER = 1048576 * 8; //8MB is a safe maximum for MacOS platforms
 
+        //On Windows setting a high receive size per async leads to random stalls on certain NICs > 1gbps
+        //128KB as a transfer limit is intended to workaround this issue.
+        public static int NETWORK_RECEIVE_MAX_TRANSFER = 128 * 1024;
+
         public static int NETWORK_ASYNC_COUNT = 4;
         public static int NETWORK_ASYNC_BUFFER_AV = 1048576;
         public static int NETWORK_ASYNC_BUFFER_META = 65536;

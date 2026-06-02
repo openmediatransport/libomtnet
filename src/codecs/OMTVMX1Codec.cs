@@ -267,7 +267,7 @@ namespace libomtnet.codecs
 
         protected override void DisposeInternal()
         {
-            if (instance != null)
+            if (instance != IntPtr.Zero)
             {
                 codec.VMX_Destroy(instance);
                 instance = IntPtr.Zero;

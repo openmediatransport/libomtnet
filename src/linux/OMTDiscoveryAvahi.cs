@@ -54,7 +54,7 @@ namespace libomtnet.linux
             public IntPtr Group;
             protected override void DisposeInternal()
             {
-                if (Group != null)
+                if (Group != IntPtr.Zero)
                 {
                     AvahiClient.avahi_entry_group_free(Group);
                     Group = IntPtr.Zero;
@@ -126,7 +126,7 @@ namespace libomtnet.linux
         protected override void DisposeInternal()
         {
             eventThreadRunning = false;
-            if (simplePoll != null)
+            if (simplePoll != IntPtr.Zero)
             {
                 AvahiClient.avahi_simple_poll_quit(simplePoll);
             }
@@ -247,7 +247,7 @@ namespace libomtnet.linux
             {
                 if (evt == AvahiResolverEvent.AVAHI_RESOLVER_FOUND)
                 {
-                    if (name != null)
+                    if (name != IntPtr.Zero)
                     {
                         IPAddress ip = null;
                         if (a != IntPtr.Zero)
