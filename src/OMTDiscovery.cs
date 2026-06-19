@@ -389,7 +389,7 @@ namespace libomtnet
         internal OMTAddress FindByFullNameOrUrl(string address)
         {
             if (string.IsNullOrEmpty(address)) { return null; }
-            if (address.ToLower().StartsWith(OMTConstants.URL_PREFIX))
+            if (address.ToLowerInvariant().StartsWith(OMTConstants.URL_PREFIX))
             {
                 return CreateFromUrl(address, 0);
             }

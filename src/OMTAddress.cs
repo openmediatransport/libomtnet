@@ -306,7 +306,7 @@ namespace libomtnet
                                     XmlNode del = e.SelectSingleNode("Removed");
                                     if (del != null)
                                     {
-                                        if (del.InnerText.ToLower() == "true")
+                                        if (del.InnerText.ToLowerInvariant() == "true")
                                         {
                                             a.removed = true;
                                         }

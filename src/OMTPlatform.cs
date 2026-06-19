@@ -61,7 +61,7 @@ namespace libomtnet
 
         public virtual string GetMachineName()
         {
-            return Environment.MachineName.ToUpper();
+            return Environment.MachineName.ToUpperInvariant();
         }
 
         public virtual IntPtr OpenLibrary(string filename)

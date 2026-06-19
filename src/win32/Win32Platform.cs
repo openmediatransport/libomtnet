@@ -62,7 +62,7 @@ namespace libomtnet.win32
             StringBuilder sb = new StringBuilder(len);
             if (GetComputerNameEx(COMPUTER_NAME_FORMAT.ComputerNamePhysicalDnsHostname,sb,ref len))
             {
-                return sb.ToString().ToUpper();
+                return sb.ToString().ToUpperInvariant();
             }
             OMTLogging.Write("Unable to retrieve full hostname", "Win32Platform");
             return base.GetMachineName();

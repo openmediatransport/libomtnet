@@ -52,7 +52,7 @@ namespace libomtnet.linux
                     string name = OMTUtils.PtrToStringUTF8(buf);
                     if (!String.IsNullOrEmpty(name))
                     {
-                        return name.ToUpper();
+                        return name.ToUpperInvariant();
                     }
                 }
             }
