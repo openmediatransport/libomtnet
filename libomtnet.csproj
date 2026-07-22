@@ -3,9 +3,9 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net40</TargetFrameworks>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
-    <AssemblyVersion>1.0.0.16</AssemblyVersion>
-    <FileVersion>1.0.0.16</FileVersion>
-    <Version>1.0.0.16</Version>
+    <AssemblyVersion>1.0.0.17</AssemblyVersion>
+    <FileVersion>1.0.0.17</FileVersion>
+    <Version>1.0.0.17</Version>
   </PropertyGroup>
 
 </Project>

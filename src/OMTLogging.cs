@@ -134,6 +134,29 @@ namespace libomtnet
             }
         }
 
+        /// <summary>
+        /// Shutdown method for unmanaged callers that need to close the logging thread gracefully
+        /// </summary>
+        public static void Shutdown()
+        {
+            if (threadRunning)
+            {
+                Write("Shutdown", "OMTLogging");
+                threadRunning = false;
+                readyEvent.Set();
+                loggingThread.Join();
+                lock (lockSync)
+                {
+                    if (logStream != null)
+                    {
+                        logStream.Close();
+                        logStream = null;
+                        logWriter = null;
+                    }
+                }
+            }
+        }
+
         public static void SetFilename(string filename)
         {
             lock (lockSync)
