@@ -301,6 +301,51 @@ namespace libomtnet.mac
             }
         }
 
+        struct ProcessResultTask
+        {
+            public bool Cancelled;
+            public AutoResetEvent Event;
+            public IntPtr sdRef;
+            public int Result;
+        }
+
+        void ProcessResultTimeout(IntPtr sdRef, int timeoutMs)
+        {
+           ProcessResultTask task = new ProcessResultTask();
+           task.Event = new AutoResetEvent(false);
+           task.sdRef = sdRef;
+            try
+            {
+                ThreadPool.QueueUserWorkItem(ProcessResult, task);
+                if (task.Event.WaitOne(timeoutMs) == false)
+                {
+                    task.Cancelled = true;
+                    OMTLogging.Write("ProcessResultTimeout", "OMTDiscoveryDnsSd");
+                }
+                DnsSd.DNSServiceRefDeallocate(task.sdRef);
+            }
+            finally
+            {
+                task.Event.Dispose();
+            }           
+        }
+        void ProcessResult(object state)
+        {
+            try
+            {
+                ProcessResultTask task = (ProcessResultTask)state;
+                task.Result = DnsSd.DNSServiceProcessResult(task.sdRef);
+                if (!task.Cancelled)
+                {
+                    task.Event.Set();
+                }
+            }
+            catch (Exception ex)
+            {
+                OMTLogging.Write(ex.ToString(), "OMTDiscoveryDnsSd");
+            }
+        }
+
         void OnBrowse(IntPtr sdRef, DNSServiceFlags flags, uint interfaceIndex, int errorCode, IntPtr serviceName, IntPtr regType, IntPtr replyDomain, IntPtr context)
         {
             try
@@ -314,10 +359,11 @@ namespace libomtnet.mac
                         {
                             IntPtr sdRRef = IntPtr.Zero;
                             IntPtr ctx = OMTUtils.StringToPtrUTF8(szServiceName);
-                            int hr = DnsSd.DNSServiceResolve(ref sdRRef, 0, 0, serviceName, regType, replyDomain, resolveCallback, ctx);
+                            int hr = DnsSd.DNSServiceResolve(ref sdRRef, 0, interfaceIndex, serviceName, regType, replyDomain, resolveCallback, ctx);
                             if (hr == 0)
                             {
-                                hr = DnsSd.DNSServiceProcessResult(sdRRef);
+                                //hr = DnsSd.DNSServiceProcessResult(sdRRef);
+                                ProcessResultTimeout(sdRRef, 2000);
                             }
                             Marshal.FreeHGlobal(ctx);
                         }
