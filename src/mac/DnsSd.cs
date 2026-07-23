@@ -426,6 +426,8 @@ namespace libomtnet.mac
 
         [DllImport(DLL_PATH)]
         public static extern int DNSServiceRegister(ref IntPtr sdRef, uint interfaceIndex, DNSServiceFlags flags,IntPtr name,IntPtr regType, IntPtr domain, IntPtr host, UInt16 port, UInt16 txtLen, IntPtr txtRecord,  IntPtr callback, IntPtr context);
-
+        
+        [DllImport(DLL_PATH)]
+        public static extern int DNSServiceSetDispatchQueue(IntPtr sdRef, IntPtr queue);
     }
 }

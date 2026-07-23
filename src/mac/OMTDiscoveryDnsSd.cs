@@ -46,19 +46,114 @@ namespace libomtnet.mac
     {
         private DnsSd.DNSServiceBrowseReply browseCallback;
         private DnsSd.DNSServiceResolveReply resolveCallback;
+        private DispatchQueue dispatchQueue;
+
+        private static DispatchQueue.DispatchDelegate deallocateDelegate = new DispatchQueue.DispatchDelegate(deallocateFunction);
+
+        private List<ResolveRequest> resolveRequests = new List<ResolveRequest>();
+
+        private class ResolveRequest
+        {
+            private IntPtr context;
+            private IntPtr sdRef;
+            private DateTime startTime;
+            public ResolveRequest(IntPtr sdRef, IntPtr context)
+            {
+                this.sdRef = sdRef;
+                this.context = context;
+                startTime = DateTime.Now;
+            }
+            public IntPtr Context { get { return context; } }
+            public IntPtr Ref { get { return sdRef; } }
+
+            public bool IsExpired()
+            {
+                if (startTime.AddSeconds(5) < DateTime.Now)
+                {
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        private void AddResolveRequest(IntPtr sdRef, IntPtr context)
+        {
+            ResolveRequest r = new ResolveRequest(sdRef, context);
+            lock (resolveRequests)
+            {
+                resolveRequests.Add(r);
+            }
+            DnsSd.DNSServiceSetDispatchQueue(r.Ref, dispatchQueue.NativePointer);
+        }
+
+        private void CompleteResolveRequest(IntPtr context)
+        {
+            lock (resolveRequests)
+            {
+                foreach (ResolveRequest r in resolveRequests)
+                {
+                    if (r.Context == context)
+                    {
+                        CompleteResolveRequest(r);
+                        break;
+                    }
+                }
+            }
+        }
+        private void CompleteResolveRequest(ResolveRequest r)
+        {
+            if (dispatchQueue != null)
+            {
+                dispatchQueue.Invoke(r.Ref, deallocateDelegate);
+            }
+            resolveRequests.Remove(r);
+            if (r.Context != IntPtr.Zero)
+            {
+                Marshal.FreeHGlobal(r.Context);
+            }
+        }
+
+        private void ClearResolveRequests(bool expiredOnly)
+        {
+            lock (resolveRequests)
+            {
+                ResolveRequest[] rr = resolveRequests.ToArray();
+                foreach (ResolveRequest r in rr)
+                {
+                    if (r.IsExpired() || expiredOnly == false)
+                    {
+                        CompleteResolveRequest(r);
+                    }
+                }
+            }
+        }
+
+        private static void deallocateFunction(IntPtr context)
+        {
+            if (context != IntPtr.Zero)
+            {
+                DnsSd.DNSServiceRefDeallocate(context);
+            }
+        }
 
         private class EntryDnsSd : OMTDiscoveryEntry
         {
-            public EntryDnsSd(OMTAddress address) : base(address) { }
+            public EntryDnsSd(OMTAddress address, DispatchQueue dispatchQueue) : base(address) {
+                this.dispatchQueue = dispatchQueue;
+            }
             public IntPtr sdRef;
             public ushort RegisteredPort;
             public string RegisteredName;
+            private DispatchQueue dispatchQueue;
 
             public void CancelRequest()
             {
                 if (sdRef != IntPtr.Zero)
                 {
-                    DnsSd.DNSServiceRefDeallocate(sdRef);
+                    if (dispatchQueue != null)
+                    {
+                        dispatchQueue.Invoke(sdRef, deallocateDelegate);
+                    }
                     sdRef = IntPtr.Zero;
                 }
             }
@@ -73,13 +168,18 @@ namespace libomtnet.mac
 
         private List<OMTAddress> registeredAddresses = new List<OMTAddress>();
         private IntPtr browseRef;
-        private Thread processingThread;
         private Timer refreshTimer;
-        private bool processing;
 
         internal OMTDiscoveryDnsSd()
         {
+            BeginDispatcher();
             BeginDNSBrowse();
+        }
+
+        internal void BeginDispatcher()
+        {
+            dispatchQueue = new DispatchQueue("local.omt.discovery");
+            OMTLogging.Write("BeginDispatcher", "OMTDiscoveryDnsSd");
         }
 
         internal void BeginDNSBrowse()
@@ -92,10 +192,11 @@ namespace libomtnet.mac
             if (hr == 0)
             {
                 OMTLogging.Write("BeginDNSBrowse.OK", "OMTDiscoveryDnsSd");
-                processingThread = new Thread(OnProcessThread);
-                processingThread.IsBackground = true;
-                processing = true;
-                processingThread.Start();
+                hr = DnsSd.DNSServiceSetDispatchQueue(browseRef, dispatchQueue.NativePointer);
+                if (hr != 0)
+                {
+                    OMTLogging.Write("BeginDNSBrowse.SetDispatchQueue.Error: " + hr, "OMTDiscoveryDnsSd");
+                }
             }
             else
             {
@@ -104,37 +205,24 @@ namespace libomtnet.mac
             Marshal.FreeHGlobal(pType);
         }
 
-        private void OnProcessThread(object state)
+        internal void EndDnsBrowse()
         {
-            try
+            if (browseRef != IntPtr.Zero && dispatchQueue != null)
             {
-                while (processing)
-                {
-                    if (browseRef == IntPtr.Zero) return;
-                    int hr = DnsSd.DNSServiceProcessResult(browseRef);
-                    if (hr != 0)
-                    {
-                        OMTLogging.Write("DNSBrowse.ProcessingError: " + hr, "OMTDiscoveryDnsSd");
-                        return;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                OMTLogging.Write(ex.ToString(), "OMTDiscoveryDnsSd.ProcessThread");
+                dispatchQueue.Invoke(browseRef, deallocateDelegate);
+                ClearResolveRequests(false);
+                browseRef = IntPtr.Zero;
+                OMTLogging.Write("EndDNSBrowse", "OMTDiscoveryDnsSd");
             }
         }
 
-        internal void EndDnsBrowse()
+        internal void EndDispatcher()
         {
-            if (browseRef != IntPtr.Zero)
+            if (dispatchQueue != null)
             {
-                processing = false;
-                DnsSd.DNSServiceRefDeallocate(browseRef);
-                browseRef = IntPtr.Zero;
-                processingThread.Join();
-                processingThread = null;
-                OMTLogging.Write("EndDNSBrowse", "OMTDiscoveryDnsSd");
+                dispatchQueue.Dispose();
+                dispatchQueue = null;
+                OMTLogging.Write("EndDispatcher", "OMTDiscoveryDnsSd");
             }
         }
 
@@ -182,7 +270,7 @@ namespace libomtnet.mac
                     int hr = DnsSd.DNSServiceRegister(ref newRequest, 0, 0, pAddress, pType, IntPtr.Zero, IntPtr.Zero, port, 0, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
                     if (hr == 0)
                     {
-                        EntryDnsSd sd = new EntryDnsSd(address);
+                        EntryDnsSd sd = new EntryDnsSd(address, dispatchQueue);
                         sd.sdRef = newRequest;
                         sd.RegisteredPort = port;
                         sd.RegisteredName = addressName;
@@ -261,6 +349,7 @@ namespace libomtnet.mac
             EndDnsBrowse();
             //StopRefreshTimer();
             base.DisposeInternal();
+            EndDispatcher();
         }
 
         void OnResolve(IntPtr sdRef, DNSServiceFlags flags, uint interfaceIndex, int errorCode, IntPtr fullName, IntPtr hostTarget, UInt16 port, UInt16 txtLen, IntPtr txtRecord, IntPtr context)
@@ -294,50 +383,9 @@ namespace libomtnet.mac
                 {
                     OMTLogging.Write("OnResolve.Error: " + errorCode, "OMTDiscoveryDnsSd");
                 }
-            }
-            catch (Exception ex)
-            {
-                OMTLogging.Write(ex.ToString(), "OMTDiscoveryDnsSd");
-            }
-        }
-
-        class ProcessResultTask
-        {
-            public bool Cancelled;
-            public AutoResetEvent Event;
-            public IntPtr sdRef;
-            public int Result;
-        }
-
-        void ProcessResultTimeout(IntPtr sdRef, int timeoutMs)
-        {
-           ProcessResultTask task = new ProcessResultTask();
-           task.Event = new AutoResetEvent(false);
-           task.sdRef = sdRef;
-            try
-            {
-                ThreadPool.QueueUserWorkItem(ProcessResult, task);
-                if (task.Event.WaitOne(timeoutMs) == false)
+                if (flags.HasFlag(DNSServiceFlags.kDNSServiceFlagsMoreComing) == false)
                 {
-                    task.Cancelled = true;
-                    OMTLogging.Write("ProcessResultTimeout", "OMTDiscoveryDnsSd");
-                }
-                DnsSd.DNSServiceRefDeallocate(task.sdRef);
-            }
-            finally
-            {
-                task.Event.Dispose();
-            }           
-        }
-        void ProcessResult(object state)
-        {
-            try
-            {
-                ProcessResultTask task = (ProcessResultTask)state;
-                task.Result = DnsSd.DNSServiceProcessResult(task.sdRef);
-                if (!task.Cancelled)
-                {
-                    task.Event.Set();
+                    CompleteResolveRequest(context);
                 }
             }
             catch (Exception ex)
@@ -362,16 +410,18 @@ namespace libomtnet.mac
                             int hr = DnsSd.DNSServiceResolve(ref sdRRef, 0, interfaceIndex, serviceName, regType, replyDomain, resolveCallback, ctx);
                             if (hr == 0)
                             {
-                                //hr = DnsSd.DNSServiceProcessResult(sdRRef);
-                                ProcessResultTimeout(sdRRef, 2000);
+                                AddResolveRequest(sdRRef, ctx);
+                             } else
+                            {
+                                Marshal.FreeHGlobal(ctx);
                             }
-                            Marshal.FreeHGlobal(ctx);
                         }
                         else
                         {
                             RemoveDiscoveredEntry(szServiceName);
                         }
                     }
+                    ClearResolveRequests(true);
                 }
                 else
                 {
