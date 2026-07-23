@@ -301,7 +301,7 @@ namespace libomtnet.mac
             }
         }
 
-        struct ProcessResultTask
+        class ProcessResultTask
         {
             public bool Cancelled;
             public AutoResetEvent Event;
