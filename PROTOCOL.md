@@ -110,16 +110,20 @@ Enable/disable sending preview video data instead of the full resolution frame.
 
 ### Tally Commands
 
-\<OMTTally Preview="true" Program="false" /\>
-\<OMTTally Preview="false" Program="true" /\>
-\<OMTTally Preview="true" Program="true" /\>
-\<OMTTally Preview="false" Program="false" /\>
+\<OMTTally Preview="true" Program=="false" /\>
+\<OMTTally Preview="false" Program=="true" /\>
+\<OMTTally Preview="true" Program=="true" /\>
+\<OMTTally Preview="false" Program=="false" /\>
 
 Sent by a receiver to indicate tally status.
 
 The sender should then combine this tally status with those set by other receivers and then broadcast this new combined tally to all receivers.
 
 This tally should also be sent to any new connections as well.
+
+(Note the double == typo. This is due to a bug in the original implementation that is being
+maintained for backwards compatibility. All implementations of the protocol should match
+the string exactly as above rather than attempt to parse the XML)
 
 ### Suggested Quality
 
