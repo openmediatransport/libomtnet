@@ -337,22 +337,19 @@ namespace libomtnet
                 {
                     subscriptions |= OMTFrameType.Metadata;
                     return true;
-                }
-                // Program== was a historical bug. Old encoders still emit those tokens,
-                // so both the well-formed and legacy forms must be accepted see issue #51.
-                else if (xml == OMTMetadataConstants.TALLY_PREVIEWPROGRAM || xml == OMTMetadataConstants.TALLY_PREVIEWPROGRAM_LEGACY)
+                } else if (xml == OMTMetadataConstants.TALLY_PREVIEWPROGRAM)
                 {
                     UpdateTally(new OMTTally(1, 1));
                     return true;
-                } else if (xml == OMTMetadataConstants.TALLY_PROGRAM || xml == OMTMetadataConstants.TALLY_PROGRAM_LEGACY)
+                } else if (xml == OMTMetadataConstants.TALLY_PROGRAM)
                 {
                     UpdateTally(new OMTTally(0, 1));
                     return true;
-                } else if (xml == OMTMetadataConstants.TALLY_PREVIEW || xml == OMTMetadataConstants.TALLY_PREVIEW_LEGACY)
+                } else if (xml == OMTMetadataConstants.TALLY_PREVIEW)
                 {
                     UpdateTally(new OMTTally(1, 0));
                     return true;
-                } else if (xml == OMTMetadataConstants.TALLY_NONE || xml == OMTMetadataConstants.TALLY_NONE_LEGACY)
+                } else if (xml == OMTMetadataConstants.TALLY_NONE)
                 {
                     UpdateTally(new OMTTally(0, 0));
                     return true;
