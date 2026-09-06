@@ -338,9 +338,8 @@ namespace libomtnet
                     subscriptions |= OMTFrameType.Metadata;
                     return true;
                 }
-                // Tally is matched as an exact string for performance, not parsed as XML.
-                // Program== was a historical bug; existing hardware still emits those tokens,
-                // so both the well-formed and legacy forms must be accepted (issue #51).
+                // Program== was a historical bug. Old encoders still emit those tokens,
+                // so both the well-formed and legacy forms must be accepted see issue #51.
                 else if (xml == OMTMetadataConstants.TALLY_PREVIEWPROGRAM || xml == OMTMetadataConstants.TALLY_PREVIEWPROGRAM_LEGACY)
                 {
                     UpdateTally(new OMTTally(1, 1));
