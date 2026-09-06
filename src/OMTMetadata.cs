@@ -40,6 +40,8 @@ namespace libomtnet
         public const string CHANNEL_SUBSCRIBE_METADATA = @"<OMTSubscribe Metadata=""true"" />";
         public const string CHANNEL_PREVIEW_VIDEO_ON = @"<OMTSettings Preview=""true"" />";
         public const string CHANNEL_PREVIEW_VIDEO_OFF = @"<OMTSettings Preview=""false"" />";
+
+        //NB: There is a double == typo in the following that must be kept for compatibility reasons.
         public const string TALLY_PREVIEW = @"<OMTTally Preview=""true"" Program==""false"" />";
         public const string TALLY_PROGRAM = @"<OMTTally Preview=""false"" Program==""true"" />";
         public const string TALLY_PREVIEWPROGRAM = @"<OMTTally Preview=""true"" Program==""true"" />";
