@@ -85,21 +85,36 @@ namespace libomtnet.src.mdns
                 {
                     if (n.SupportsMulticast)
                     {
-                        IPInterfaceProperties ip = n.GetIPProperties();
-                        if (ip != null)
+                        //On .NET (Core) for Windows, GetAllNetworkInterfaces also returns NDIS filter, WAN Miniport and tunnel interfaces,
+                        //which throw NetworkInformationException (10043) from GetIPv4Properties/GetIPv6Properties. Skip them rather than fail the whole client.
+                        try
                         {
-                            IPv4InterfaceProperties ipv4 = ip.GetIPv4Properties();
-                            if (ipv4 != null)
+                            IPInterfaceProperties ip = n.GetIPProperties();
+                            if (ip != null)
                             {
-                                s = CreateMulticastSocket(AddressFamily.InterNetwork, ipv4.Index, DEFAULT_PORT);
-                                if (s != null) l.Add(s);
+                                if (n.Supports(NetworkInterfaceComponent.IPv4))
+                                {
+                                    IPv4InterfaceProperties ipv4 = ip.GetIPv4Properties();
+                                    if (ipv4 != null)
+                                    {
+                                        s = CreateMulticastSocket(AddressFamily.InterNetwork, ipv4.Index, DEFAULT_PORT);
+                                        if (s != null) l.Add(s);
+                                    }
+                                }
+                                if (n.Supports(NetworkInterfaceComponent.IPv6))
+                                {
+                                    IPv6InterfaceProperties ipv6 = ip.GetIPv6Properties();
+                                    if (ipv6 != null)
+                                    {
+                                        s = CreateMulticastSocket(AddressFamily.InterNetworkV6, ipv6.Index, DEFAULT_PORT);
+                                        if (s != null) l.Add(s);
+                                    }
+                                }
                             }
-                            IPv6InterfaceProperties ipv6 = ip.GetIPv6Properties();
-                            if (ipv6 != null)
-                            {
-                                s = CreateMulticastSocket(AddressFamily.InterNetworkV6, ipv6.Index, DEFAULT_PORT);
-                                if (s != null) l.Add(s);
-                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            OMTLogging.Write("Skipped " + n.Name + ": " + ex.Message, "MDNSClient");
                         }
                     }
                 }
