@@ -27,6 +27,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Runtime.InteropServices;
+using System.Diagnostics;
 
 namespace libomtnet.win32
 {
@@ -170,6 +171,7 @@ namespace libomtnet.win32
             {
                 this.registerType = registerType;
                 this.handle = Marshal.AllocHGlobal(8);
+                Marshal.WriteInt64(this.handle, 0);
             }
             public override bool IsInvalid
             {
@@ -206,13 +208,17 @@ namespace libomtnet.win32
             {
                 if (handle != IntPtr.Zero)
                 {
-                    if (registerType)
+                    Int64 v = Marshal.ReadInt64(handle);
+                    if (v != 0)
                     {
-                        DnsServiceRegisterCancel(handle);
-                    }
-                    else
-                    {
-                        DnsServiceBrowseCancel(handle);
+                        if (registerType)
+                        {
+                            DnsServiceRegisterCancel(handle);
+                        }
+                        else
+                        {
+                            DnsServiceBrowseCancel(handle);
+                        }
                     }
                     Marshal.FreeHGlobal(handle);
                     handle = IntPtr.Zero;
@@ -242,7 +248,7 @@ namespace libomtnet.win32
         public static extern int DnsServiceRegister(ref PDNS_SERVICE_REGISTER_REQUEST pRequest, DnsCancelHandle pCancel);
 
         [DllImport("dnsapi.dll")]
-        public static extern int DnsServiceDeRegister(ref PDNS_SERVICE_REGISTER_REQUEST pRequest,  IntPtr pCancel);
+        public static extern int DnsServiceDeRegister(ref PDNS_SERVICE_REGISTER_REQUEST pRequest, IntPtr pCancel);
 
         //MDNS API
         [DllImport("dnsapi.dll")]

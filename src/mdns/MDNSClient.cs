@@ -88,17 +88,31 @@ namespace libomtnet.src.mdns
                         IPInterfaceProperties ip = n.GetIPProperties();
                         if (ip != null)
                         {
-                            IPv4InterfaceProperties ipv4 = ip.GetIPv4Properties();
-                            if (ipv4 != null)
+                            try
                             {
-                                s = CreateMulticastSocket(AddressFamily.InterNetwork, ipv4.Index, DEFAULT_PORT);
-                                if (s != null) l.Add(s);
+                                IPv4InterfaceProperties ipv4 = ip.GetIPv4Properties();
+                                if (ipv4 != null)
+                                {
+                                    s = CreateMulticastSocket(AddressFamily.InterNetwork, ipv4.Index, DEFAULT_PORT);
+                                    if (s != null) l.Add(s);
+                                }
                             }
-                            IPv6InterfaceProperties ipv6 = ip.GetIPv6Properties();
-                            if (ipv6 != null)
+                            catch (Exception ex)
                             {
-                                s = CreateMulticastSocket(AddressFamily.InterNetworkV6, ipv6.Index, DEFAULT_PORT);
-                                if (s != null) l.Add(s);
+                                OMTLogging.Write(ex.ToString(), "MDNSClient");
+                            }
+                            try
+                            {
+                                IPv6InterfaceProperties ipv6 = ip.GetIPv6Properties();
+                                if (ipv6 != null)
+                                {
+                                    s = CreateMulticastSocket(AddressFamily.InterNetworkV6, ipv6.Index, DEFAULT_PORT);
+                                    if (s != null) l.Add(s);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                OMTLogging.Write(ex.ToString(), "MDNSClient");
                             }
                         }
                     }
