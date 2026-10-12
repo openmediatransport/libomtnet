@@ -87,6 +87,7 @@ namespace libomtnet
         {
             public OMTFrameType frameType;
             public Socket socket;
+            public OMTMultiConnectSocket multiSocket;
             public IAsyncResult result;
 
             //This is set to true to gracefully ignore any successful pending socket connect callbacks when we use Reconnect. 
@@ -386,9 +387,11 @@ namespace libomtnet
             ConnectionState cs = new ConnectionState();
             cs.cancelled = false;
             cs.frameType = frameType;
-            cs.socket = new Socket(AddressFamily.InterNetworkV6, SocketType.Stream, ProtocolType.Tcp);
-            cs.socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
-            cs.result = cs.socket.BeginConnect(ips, port, ConnectionCompleted, cs);
+            //cs.socket = new Socket(AddressFamily.InterNetworkV6, SocketType.Stream, ProtocolType.Tcp);
+            //cs.socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, false);
+            //cs.result = cs.socket.BeginConnect(ips, port, ConnectionCompleted, cs);
+            cs.multiSocket = new OMTMultiConnectSocket(ips, port, OMTConstants.NETWORK_CONNECTION_TIMEOUT);
+            cs.result = cs.multiSocket.BeginConnect(ConnectionCompleted, cs);
             if (cs.result.CompletedSynchronously)
             {
                 return null;
@@ -403,7 +406,8 @@ namespace libomtnet
                 ConnectionState cs = (ConnectionState)ar.AsyncState;
                 try
                 {
-                    cs.socket.EndConnect(ar);
+                    //cs.socket.EndConnect(ar);
+                    cs.socket = cs.multiSocket.EndConnect(ar);
                     if (ar.IsCompleted)
                     {
                         if (cs.cancelled)

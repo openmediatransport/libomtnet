@@ -70,5 +70,8 @@ namespace libomtnet
         public static int METADATA_FRAME_SIZE = 65536;
 
         public static string URL_PREFIX = "omt://";
+
+        //Timeout in milliseconds when trying to connect to each IP of a sender
+        public static int NETWORK_CONNECTION_TIMEOUT = 2000;
     }
 }
